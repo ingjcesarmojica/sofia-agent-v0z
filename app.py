@@ -2,25 +2,23 @@ import os
 import requests
 import base64
 import boto3
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_from_directory
 from flask_cors import CORS
 import logging
 from botocore.exceptions import BotoCoreError, ClientError
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='.', static_url_path='')
 CORS(app)
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
 
-# Configuración AWS Polly (opcional)
-AWS_ACCESS_KEY = os.environ.get("AWS_ACCESS_KEY")
-AWS_SECRET_KEY = os.environ.get("AWS_SECRET_KEY")
-AWS_REGION = os.environ.get("AWS_REGION", "us-east-1")
+# Configuración para Render - manejar correctamente el puerto
+port = int(os.environ.get('PORT', 5000))
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return send_from_directory('.', 'index.html')
 
 @app.route('/api/speak', methods=['POST'])
 def speak_text():
@@ -119,5 +117,4 @@ def health_check():
     })
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
