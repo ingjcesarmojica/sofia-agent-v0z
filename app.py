@@ -2,23 +2,28 @@ import os
 import requests
 import base64
 import boto3
-from flask import Flask, render_template, request, jsonify, send_from_directory
+from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
 import logging
 from botocore.exceptions import BotoCoreError, ClientError
 
-app = Flask(__name__, static_folder='.', static_url_path='')
+app = Flask(__name__)
 CORS(app)
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
 
-# Configuración para Render - manejar correctamente el puerto
-port = int(os.environ.get('PORT', 5000))
+# Configuración AWS Polly
+AWS_ACCESS_KEY = os.environ.get("AWS_ACCESS_KEY")
+AWS_SECRET_KEY = os.environ.get("AWS_SECRET_KEY")
+AWS_REGION = os.environ.get("AWS_REGION", "us-east-1")
+
+# Verificar si las credenciales AWS están configuradas
+AWS_CONFIGURED = bool(AWS_ACCESS_KEY and AWS_SECRET_KEY)
 
 @app.route('/')
 def index():
-    return send_from_directory('.', 'index.html')
+    return render_template('index.html')
 
 @app.route('/api/speak', methods=['POST'])
 def speak_text():
@@ -29,24 +34,59 @@ def speak_text():
         if not text:
             return jsonify({'error': 'No text provided'}), 400
         
-        # Modo emergencia: usar navegador siempre
-        app.logger.warning("Modo emergencia activado - usando navegador TTS")
+        # Modo emergencia si no hay credenciales AWS
+        if not AWS_CONFIGURED:
+            app.logger.warning("Modo emergencia activado - sin credenciales AWS")
+            return jsonify({
+                'audioContent': None,
+                'audioUrl': None,
+                'useBrowserTTS': True,
+                'text': text
+            })
+        
+        # Configurar cliente de Polly
+        polly = boto3.client('polly',
+                            aws_access_key_id=AWS_ACCESS_KEY,
+                            aws_secret_access_key=AWS_SECRET_KEY,
+                            region_name=AWS_REGION)
+        
+        # Sintetizar voz con Polly
+        response = polly.synthesize_speech(
+            Text=text,
+            OutputFormat='mp3',
+            VoiceId='Mia'      # Femenina - Español mexicano  
+            # Otras voces en español: 'Enrique', 'Mia', 'Penelope'
+        )
+        
+        # Convertir audio a base64
+        audio_data = response['AudioStream'].read()
+        audio_content = base64.b64encode(audio_data).decode('utf-8')
+        
+        return jsonify({
+            'audioContent': audio_content,
+            'audioUrl': f"data:audio/mp3;base64,{audio_content}"
+        })
+            
+    except (BotoCoreError, ClientError) as error:
+        app.logger.error(f"AWS Polly error: {error}")
+        # Fallback a modo navegador si hay error de AWS
         return jsonify({
             'audioContent': None,
             'audioUrl': None,
             'useBrowserTTS': True,
-            'text': text
+            'text': text,
+            'error': str(error)
         })
-            
     except Exception as e:
         app.logger.error(f"Exception in speak_text: {str(e)}")
+        # Fallback a modo navegador para cualquier otro error
         return jsonify({
             'audioContent': None,
             'audioUrl': None,
             'useBrowserTTS': True,
             'text': text,
             'error': str(e)
-        }), 500
+        })
 
 @app.route('/api/chat', methods=['POST'])
 def chat():
@@ -103,18 +143,17 @@ def chat():
             
     except Exception as e:
         app.logger.error(f"Exception in chat: {str(e)}")
-        return jsonify({
-            'response': "Estoy teniendo dificultades técnicas. Por favor contacta directamente a Rocío por WhatsApp para más información."
-        })
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
     """Endpoint para verificar el estado del servicio"""
     return jsonify({
         'status': 'healthy',
-        'aws_configured': False,
-        'service': 'Modo emergencia - Navegador TTS'
+        'aws_configured': AWS_CONFIGURED,
+        'service': 'Amazon Polly' if AWS_CONFIGURED else 'Modo emergencia - Navegador TTS'
     })
 
 if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
