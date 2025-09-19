@@ -13,7 +13,7 @@ CORS(app)
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
 
-# Configuración AWS Polly
+# Configuración AWS Polly (opcional)
 AWS_ACCESS_KEY = os.environ.get("AWS_ACCESS_KEY")
 AWS_SECRET_KEY = os.environ.get("AWS_SECRET_KEY")
 AWS_REGION = os.environ.get("AWS_REGION", "us-east-1")
@@ -31,39 +31,24 @@ def speak_text():
         if not text:
             return jsonify({'error': 'No text provided'}), 400
         
-        if not AWS_ACCESS_KEY or not AWS_SECRET_KEY:
-            app.logger.error("AWS credentials not configured")
-            return jsonify({'error': 'AWS credentials not configured'}), 500
-        
-        # Configurar cliente de Polly
-        polly = boto3.client('polly',
-                            aws_access_key_id=AWS_ACCESS_KEY,
-                            aws_secret_access_key=AWS_SECRET_KEY,
-                            region_name=AWS_REGION)
-        
-        # Sintetizar voz con Polly
-        response = polly.synthesize_speech(
-            Text=text,
-            OutputFormat='mp3',
-            VoiceId='Mia'      # Femenina - Español mexicano  
-            # Otras voces en español: 'Enrique', 'Mia', 'Penelope'
-        )
-        
-        # Convertir audio a base64
-        audio_data = response['AudioStream'].read()
-        audio_content = base64.b64encode(audio_data).decode('utf-8')
-        
+        # Modo emergencia: usar navegador siempre
+        app.logger.warning("Modo emergencia activado - usando navegador TTS")
         return jsonify({
-            'audioContent': audio_content,
-            'audioUrl': f"data:audio/mp3;base64,{audio_content}"
+            'audioContent': None,
+            'audioUrl': None,
+            'useBrowserTTS': True,
+            'text': text
         })
             
-    except (BotoCoreError, ClientError) as error:
-        app.logger.error(f"AWS Polly error: {error}")
-        return jsonify({'error': f'AWS Polly error: {error}'}), 500
     except Exception as e:
         app.logger.error(f"Exception in speak_text: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+        return jsonify({
+            'audioContent': None,
+            'audioUrl': None,
+            'useBrowserTTS': True,
+            'text': text,
+            'error': str(e)
+        }), 500
 
 @app.route('/api/chat', methods=['POST'])
 def chat():
@@ -79,13 +64,8 @@ def chat():
         
         if any(word in message_lower for word in ['hola', 'buenos días', 'buenas tardes', 'saludos']):
             response = "¡Hola! Un gusto saludarte. Somos la Fundación VANALI. Nuestro objetivo social es apoyar el emprendimiento de las mujeres cabeza de familia a través de cursos de manualidades."
-        elif any(word in message_lower for word in ['que cursos hay','cuales estan dictando ahora','cuales estan dictando','ahorita que curso esta','ahorita que cursos estan dictando','ahorita cual estan dictando','que cursos tienen','que cursos hay','curso actual', 'curso disponible', 'cursos disponibles', 'ofrecen', 'qué hacen', 'muñeco', 'noel']):
+        elif any(word in message_lower for word in ['curso', 'cursos', 'ofrecen', 'qué hacen', 'muñeco', 'noel']):
             response = "Actualmente estamos dictando dos cursos muy especiales y navideños:\n1. Curso de Muñeco Papá Noel.\n2. Curso de Muñeco Mamá Noel."
-        # NUEVAS PREGUNTAS SOBRE FECHAS
-        elif any(word in message_lower for word in ['fecha', 'fechas', 'cuándo empieza', 'cuando inician los cursos', 'cuándo comienza', 'cuando comienzan', 'inicio del curso', 'cuando inicia el curso', 'próximo curso', 'proximo curso', 'cuando inicia', 'cuando inician', 'día de inicio', 'dia de inicio', 'empezar', 'comenzar', 'iniciar', 'arranque', 'cuándo arranca', 'cuando arranca']):
-            response = "Para saber qué fecha es la más próxima contáctate vía WhatsApp"
-        elif any(word in message_lower for word in ['me dices cuando comienzan', 'dime cuando comienzan', 'cuando comienzan', 'cuándo comienzan', 'me dices cuando empiezan', 'dime cuando empiezan', 'cuando empiezan', 'cuándo empiezan', 'me dices la fecha', 'dime la fecha', 'quiero saber la fecha', 'necesito saber la fecha', 'información de fechas', 'informacion de fechas', 'fechas de inicio', 'cuando son las clases', 'cuándo son las clases']):
-            response = "Para saber qué fecha es la más próxima contáctate vía WhatsApp, por favor"
         elif any(word in message_lower for word in ['dónde', 'donde', 'ubicación', 'ubicacion', 'ubicada', 'lugar', 'dirección', 'direccion', 'dirigirme', 'local', 'sitio', 'fusagasugá', 'fusagasuga', 'barrio', 'gaitán', 'gaitan', 'colegio', 'manuel', 'humberto', 'conjunto', 'andalucía', 'andaluci', 'andalucia']):
             response = "Los cursos son presenciales en la ciudad de Fusagasugá. Las clases se dictan en el Conjunto Andalucía, ubicado en el barrio Gaitán, específicamente frente al Colegio Manuel Humberto. ¡Es muy fácil de encontrar!"
         elif any(word in message_lower for word in ['profesor', 'profesora', 'quién enseña', 'imparte', 'rocío']):
@@ -103,6 +83,11 @@ def chat():
         elif any(word in message_lower for word in ['precio', 'costo', 'valor', 'cuánto cuesta', 'tarifa']):
             response = "Para conocer los precios actualizados y toda la información sobre costos, te recomiendo contactar directamente a nuestra instructora Rocío por WhatsApp. Ella te dará todos los detalles personalizados. Da click en el icono de whatsapp, el sistema te comunicará automáticamente con ella"
         
+        # NUEVAS PREGUNTAS SOBRE FECHAS
+        elif any(word in message_lower for word in ['fecha', 'fechas', 'cuándo empieza', 'cuando inician los cursos', 'cuándo comienza', 'cuando comienzan', 'inicio del curso', 'cuando inicia el curso', 'próximo curso', 'proximo curso', 'cuando inicia', 'cuando inician', 'día de inicio', 'dia de inicio', 'empezar', 'comenzar', 'iniciar', 'arranque', 'cuándo arranca', 'cuando arranca']):
+            response = "Para saber qué fecha es la más próxima contáctate vía WhatsApp"
+        elif any(word in message_lower for word in ['me dices cuando comienzan', 'dime cuando comienzan', 'cuando comienzan', 'cuándo comienzan', 'me dices cuando empiezan', 'dime cuando empiezan', 'cuando empiezan', 'cuándo empiezan', 'me dices la fecha', 'dime la fecha', 'quiero saber la fecha', 'necesito saber la fecha', 'información de fechas', 'informacion de fechas', 'fechas de inicio', 'cuando son las clases', 'cuándo son las clases']):
+            response = "Para saber qué fecha es la más próxima contáctate vía WhatsApp, por favor"
         
         elif any(word in message_lower for word in ['gracias', 'muchas gracias', 'mil gracias', 'gracias rocio', 'gracias rocio', 'agradecer', 'agradecido', 'agradecida', 'amable', 'thanks', 'thank you', 'merci', 'te lo agradezco', 'se lo agradezco', 'appreciate', 'agradecimiento', 'valoro', 'agradecimiento', 'excelente ayuda', 'buena ayuda', 'muy amable', 'que amable', 'eres muy amable', 'muy agradecido', 'muy agradecida', 'perfecto', 'genial', 'fantástico', 'fantastico', 'estupendo', 'increíble', 'increible', 'brutal', 'chévere', 'chevere', 'cool', 'ok', 'okay', 'vale', 'listo', 'de acuerdo', 'entendido', 'comprendido', 'excelente', 'bien', 'good', 'nice', 'awesome', 'great']):
             response = "¡Es un placer ayudarte! Estoy aquí para lo que necesites. ¿Hay algo más en lo que pueda asistirte?"
@@ -120,15 +105,17 @@ def chat():
             
     except Exception as e:
         app.logger.error(f"Exception in chat: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+        return jsonify({
+            'response': "Estoy teniendo dificultades técnicas. Por favor contacta directamente a Rocío por WhatsApp para más información."
+        })
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
     """Endpoint para verificar el estado del servicio"""
     return jsonify({
         'status': 'healthy',
-        'aws_configured': bool(AWS_ACCESS_KEY and AWS_SECRET_KEY),
-        'service': 'Amazon Polly'
+        'aws_configured': False,
+        'service': 'Modo emergencia - Navegador TTS'
     })
 
 if __name__ == '__main__':
