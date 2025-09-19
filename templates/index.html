@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sofia - Asistente Virtual</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .container {
+            background: white;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            background: white;
+            color: #2c3e50;
+            padding: 20px 20px 15px;
+            text-align: center;
+            position: relative;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            height: 100vh;
+        }
+        
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 25px;
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+        }
+        
+        .logo {
+            height: 40px;
+            width: auto;
+            max-width: 85%;
+        }
+        
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            padding-top: 80px;
+        }
+        
+        .avatar-container {
+            margin: 0 auto 15px;
+            width: 120px;
+            height: 120px;
+            position: relative;
+        }
+        
+        .avatar {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 3px solid #e0e0e0;
+            background: #e0e0e0 url('https://bidamericas.com/tusabogados/foto.png') center/cover;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 2;
+        }
+        
+        .pulse-ring {
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            right: -5px;
+            bottom: -5px;
+            border: 2px solid #3498db;
+            border-radius: 50%;
+            opacity: 0;
+            z-index: 1;
+            animation: none;
+        }
+        
+        .pulse-ring.active {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                transform: scale(0.95);
+                opacity: 0.8;
+            }
+            70% {
+                transform: scale(1.1);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1.1);
+                opacity: 0;
+            }
+        }
+        
+        h1 {
+            font-size: 24px;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .subtitle {
+            font-size: 16px;
+            color: #7f8c8d;
+            margin-bottom: 20px;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            background: #f1f2f6;
+            padding: 8px 15px;
+            border-radius: 18px;
+            font-size: 13px;
+            margin-top: 15px;
+            color: #7f8c8d;
+        }
+        
+        .talk-button {
+            display: block;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            padding: 14px 30px;
+            margin: 15px auto 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+        
+        .talk-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+            background: #2980b9;
+        }
+        
+        .talk-button.listening {
+            background: #e74c3c;
+            animation: pulse 1.5s infinite;
+        }
+        
+        .call-status {
+            display: none;
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .call-status.active {
+            display: block;
+        }
+        
+        .call-timer {
+            font-size: 17px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        
+        .call-controls {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            margin-top: 15px;
+        }
+        
+        .call-btn {
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 50%;
+            width: 55px;
+            height: 55px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .call-btn:hover {
+            background: #e8f4fd;
+            transform: scale(1.05);
+        }
+        
+        .call-btn.mute {
+            color: #7f8c8d;
+        }
+        
+        .call-btn.end {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .call-btn.end:hover {
+            background: #c0392b;
+        }
+        
+        .loading-dots {
+            display: inline-block;
+            margin-left: 5px;
+        }
+        
+        .loading-dots span {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: #3498db;
+            margin: 0 2px;
+            animation: bounce 1.5s infinite ease-in-out both;
+        }
+        
+        .loading-dots span:nth-child(1) {
+            animation-delay: -0.32s;
+        }
+        
+        .loading-dots span:nth-child(2) {
+            animation-delay: -0.16s;
+        }
+        
+        @keyframes bounce {
+            0%, 80%, 100% {
+                transform: scale(0);
+            }
+            40% {
+                transform: scale(1);
+            }
+        }
+        
+        .error-message {
+            background: #ffe6e6;
+            color: #d63031;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-size: 14px;
+            display: none;
+            max-width: 300px;
+            text-align: center;
+        }
+        
+        .server-status {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            z-index: 1000;
+        }
+        
+        .server-status.connected {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .server-status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .tts-mode {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            z-index: 1000;
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        @media (max-width: 480px) {
+            .header {
+                padding: 15px 15px 10px;
+            }
+            
+            .avatar-container {
+                width: 100px;
+                height: 100px;
+            }
+            
+            h1 {
+                font-size: 22px;
+            }
+            
+            .subtitle {
+                font-size: 15px;
+            }
+            
+            .talk-button {
+                padding: 12px 25px;
+                font-size: 15px;
+            }
+            
+            .call-btn {
+                width: 50px;
+                height: 50px;
+            }
+            
+            .status-indicator {
+                font-size: 12px;
+                padding: 6px 12px;
+            }
+            
+            .server-status {
+                bottom: 5px;
+                right: 5px;
+                font-size: 10px;
+            }
+            
+            .tts-mode {
+                bottom: 5px;
+                left: 5px;
+                font-size: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo-container">
+                <img src="https://bidamericas.com/tusabogados/logo.png" alt="Fusa Abogados" class="logo">
+            </div>
+            
+            <div class="main-content">
+                <div class="avatar-container">
+                    <div class="avatar"></div>
+                    <div class="pulse-ring" id="pulseRing"></div>
+                </div>
+                
+                <h1>Sofia</h1>
+                <p class="subtitle">Representante de atención al cliente</p>
+                
+                <div class="error-message" id="errorMessage"></div>
+                
+                <button class="talk-button" id="talkButton" onclick="toggleVoiceRecognition()">
+                    🎤 Hablar con Sofia
+                </button>
+                
+                <div class="status-indicator" id="statusIndicator">Voz lista</div>
+                
+                <div class="call-status" id="callStatus">
+                    <div class="call-timer" id="callTimer">Hablando 00:00</div>
+                    <div class="call-controls">
+                        <div class="call-btn mute" onclick="toggleMute()">
+                            🔇
+                        </div>
+                        <div class="call-btn end" onclick="endCall()">
+                            📞
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="server-status" id="serverStatus">Modo offline</div>
+    <div class="tts-mode" id="ttsMode">Modo emergencia: Voz del navegador</div>
+
+    <script>
+        let voiceSupported = false;
+        let recognition = null;
+        let isListening = false;
+        let callTimer = null;
+        let callSeconds = 0;
+        let isMuted = false;
+        let isProcessing = false;
+        let isSpeaking = false;
+        let currentTTSMode = 'browser';
+        
+        // Detectar si estamos en localhost o en un servidor real
+        const isLocalFile = window.location.protocol === 'file:';
+        
+        // URLs base de la API
+        const API_BASE_URL = isLocalFile ? 'http://localhost:5000' : window.location.origin;
+        const CHAT_API_URL = `${API_BASE_URL}/api/chat`;
+        const SPEAK_API_URL = `${API_BASE_URL}/api/speak`;
+        
+        console.log("URL base de API:", API_BASE_URL);
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+
+        function initializeApp() {
+            checkVoiceSupport();
+            
+            // Modo offline - no verificar servidor
+            document.getElementById('serverStatus').textContent = 'Modo offline';
+            document.getElementById('serverStatus').className = 'server-status disconnected';
+            showTTSEmergencyMode();
+            
+            // Mensaje de bienvenida por voz
+            setTimeout(() => {
+                speakText("Hola, mi nombre es Sofia. Soy tu asistente virtual. Estoy en modo offline. ¿En qué puedo ayudarte hoy?");
+            }, 1000);
+        }
+
+        function checkServerStatus() {
+            // No hacer nada en modo offline
+            console.log("Modo offline activado - saltando verificación de servidor");
+        }
+
+        function showTTSEmergencyMode() {
+            currentTTSMode = 'browser';
+            const ttsModeElement = document.getElementById('ttsMode');
+            ttsModeElement.style.display = 'block';
+            ttsModeElement.textContent = 'Modo emergencia: Usando voz del navegador';
+        }
+
+        function checkVoiceSupport() {
+            voiceSupported = ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
+            
+            if (!voiceSupported) {
+                document.getElementById('statusIndicator').textContent = "Voz no compatible";
+                document.getElementById('talkButton').style.display = 'none';
+                showError("Tu navegador no soporta reconocimiento de voz. Por favor usa Chrome o Edge.");
+            }
+        }
+
+        function toggleVoiceRecognition() {
+            if (isListening) {
+                stopVoiceRecognition();
+            } else {
+                startVoiceRecognition();
+            }
+        }
+
+        function startVoiceRecognition() {
+            if (!voiceSupported) {
+                showError("El reconocimiento de voz no es compatible con tu navegador. Usa Chrome o Edge.");
+                return;
+            }
+
+            if (isProcessing) {
+                showError("Estoy procesando tu solicitud. Por favor espera.");
+                return;
+            }
+
+            const talkButton = document.getElementById('talkButton');
+            const pulseRing = document.getElementById('pulseRing');
+            const callStatus = document.getElementById('callStatus');
+            const statusIndicator = document.getElementById('statusIndicator');
+            
+            recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = 'es-ES';
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            
+            recognition.onstart = function() {
+                isListening = true;
+                talkButton.textContent = "🛑 Detener conversación";
+                talkButton.classList.add('listening');
+                pulseRing.classList.add('active');
+                callStatus.classList.add('active');
+                statusIndicator.textContent = "Escuchando...";
+                hideError();
+                
+                startCallTimer();
+            };
+            
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                console.log("Usuario dijo:", transcript);
+                
+                isListening = false;
+                recognition.stop();
+                
+                statusIndicator.innerHTML = "Procesando<span class='loading-dots'><span></span><span></span><span></span></span>";
+                
+                // Usar función offline en lugar de fetch
+                sendChatMessage(transcript);
+            };
+            
+            recognition.onerror = function(event) {
+                console.error('Error en reconocimiento:', event.error);
+                if (event.error !== 'no-speech' && event.error !== 'aborted') {
+                    showError("Error de reconocimiento: " + event.error);
+                }
+                stopVoiceRecognition();
+            };
+            
+            recognition.onend = function() {
+                console.log("Reconocimiento finalizado");
+                if (isListening && !isProcessing && !isSpeaking) {
+                    console.log("Reiniciando reconocimiento...");
+                    try {
+                        recognition.start();
+                    } catch (error) {
+                        console.error('Error reiniciando reconocimiento:', error);
+                        stopVoiceRecognition();
+                    }
+                }
+            };
+            
+            try {
+                recognition.start();
+                console.log("Reconocimiento iniciado");
+            } catch (error) {
+                console.error('Error al activar el micrófono:', error);
+                showError('Error al activar el micrófono: ' + error.message);
+            }
+        }
+
+        function sendChatMessage(message) {
+            isProcessing = true;
+            const statusIndicator = document.getElementById('statusIndicator');
+            statusIndicator.innerHTML = "Procesando<span class='loading-dots'><span></span><span></span><span></span></span>";
+            
+            // Simular respuesta del servidor offline
+            setTimeout(() => {
+                let response = "";
+                const messageLower = message.toLowerCase();
+                
+                if (messageLower.includes('hola') || messageLower.includes('buenos') || messageLower.includes('saludos')) {
+                    response = "¡Hola! Un gusto saludarte. Somos la Fundación VANALI. Nuestro objetivo social es apoyar el emprendimiento de las mujeres cabeza de familia a través de cursos de manualidades.";
+                }
+                else if (messageLower.includes('curso') || messageLower.includes('muñeco') || messageLower.includes('noel')) {
+                    response = "Actualmente estamos dictando dos cursos muy especiales y navideños:\n1. Curso de Muñeco Papá Noel.\n2. Curso de Muñeco Mamá Noel.";
+                }
+                else if (messageLower.includes('dónde') || messageLower.includes('donde') || messageLower.includes('ubicación') || messageLower.includes('fusagasugá')) {
+                    response = "Los cursos son presenciales en Fusagasugá. Clases en el Conjunto Andalucía, barrio Gaitán, frente al Colegio Manuel Humberto.";
+                }
+                else if (messageLower.includes('profesor') || messageLower.includes('rocío')) {
+                    response = "Nuestros cursos son impartidos por la profesora Rocío, experta en manualidades con más de 20 años de experiencia.";
+                }
+                else if (messageLower.includes('inscribir') || messageLower.includes('requisitos')) {
+                    response = "Para inscribirte, contacta a Rocío por WhatsApp a través del icono de la aplicación.";
+                }
+                else if (messageLower.includes('materiales') || messageLower.includes('incluidos')) {
+                    response = "El curso incluye todos los materiales necesarios. También puedes adquirirlos por tu cuenta si prefieres.";
+                }
+                else if (messageLower.includes('dura') || messageLower.includes('horas')) {
+                    response = "Duración:\n- Papá Noel: 4 clases de 2 horas\n- Mamá Noel: 5 clases de 2 horas\nMartes y jueves";
+                }
+                else if (messageLower.includes('horario') || messageLower.includes('cuándo')) {
+                    response = "Horarios:\nMañana: 9:00 a. m. a 11:00 a. m.\nTarde: 3:00 p. m. a 5:00 p. m.\nLunes a viernes";
+                }
+                else if (messageLower.includes('certificado') || messageLower.includes('premio')) {
+                    response = "Al finalizar recibirás un certificado y posiblemente un premio si tu muñeco es el ganador.";
+                }
+                else if (messageLower.includes('precio') || messageLower.includes('costo')) {
+                    response = "Para precios actualizados, contacta a Rocío por WhatsApp haciendo click en el icono.";
+                }
+                else if (messageLower.includes('fecha') || messageLower.includes('cuándo empieza')) {
+                    response = "Para fechas de inicio, contáctate vía WhatsApp con Rocío.";
+                }
+                else if (messageLower.includes('gracias')) {
+                    response = "¡Es un placer ayudarte! Estoy aquí para lo que necesites. ¿Hay algo más en lo que pueda asistirte?";
+                }
+                else {
+                    const responses = [
+                        "Te recomiendo contactar directamente a nuestra instructora Rocío por WhatsApp para más detalles.",
+                        "Para información específica, te sugiero comunicarte con Rocío por WhatsApp.",
+                        "Para una atención personalizada, contacta a Rocío por WhatsApp haciendo click en el icono."
+                    ];
+                    response = responses[Math.floor(Math.random() * responses.length)];
+                }
+                
+                isProcessing = false;
+                speakText(response);
+                
+            }, 1000); // Simular delay de procesamiento
+        }
+
+        function stopVoiceRecognition() {
+            if (recognition) {
+                try {
+                    recognition.stop();
+                } catch (error) {
+                    console.error("Error deteniendo reconocimiento:", error);
+                }
+            }
+            
+            isListening = false;
+            isProcessing = false;
+            const talkButton = document.getElementById('talkButton');
+            const pulseRing = document.getElementById('pulseRing');
+            const callStatus = document.getElementById('callStatus');
+            const statusIndicator = document.getElementById('statusIndicator');
+            
+            talkButton.textContent = "🎤 Hablar con Sofia";
+            talkButton.classList.remove('listening');
+            pulseRing.classList.remove('active');
+            callStatus.classList.remove('active');
+            statusIndicator.textContent = "Voz lista";
+            
+            stopCallTimer();
+        }
+
+        function speakText(text) {
+            isSpeaking = true;
+            
+            const statusIndicator = document.getElementById('statusIndicator');
+            statusIndicator.textContent = "Hablando...";
+            
+            // Modo offline: usar siempre navegador
+            useBrowserTTS(text);
+        }
+
+        // Función para usar la síntesis de voz del navegador
+        function useBrowserTTS(text) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'es-ES';
+                
+                utterance.onstart = function() {
+                    console.log("Navegador TTS iniciado");
+                };
+                
+                utterance.onend = function() {
+                    console.log("Navegador TTS terminado");
+                    handleSpeechEnd();
+                };
+                
+                utterance.onerror = function(event) {
+                    console.error("Error en navegador TTS:", event.error);
+                    handleSpeechEnd();
+                    showError("Error al hablar: " + event.error);
+                };
+                
+                speechSynthesis.speak(utterance);
+            } else {
+                console.error("Síntesis de voz no soportada en este navegador");
+                handleSpeechEnd();
+                showError("La síntesis de voz no es compatible con tu navegador");
+            }
+        }
+
+        // Manejar el final del habla
+        function handleSpeechEnd() {
+            isSpeaking = false;
+            const statusIndicator = document.getElementById('statusIndicator');
+            statusIndicator.textContent = "Voz lista";
+            
+            if (!isListening) {
+                try {
+                    startVoiceRecognition();
+                } catch (error) {
+                    console.error('Error reiniciando reconocimiento:', error);
+                    stopVoiceRecognition();
+                }
+            }
+        }
+
+        function startCallTimer() {
+            callSeconds = 0;
+            callTimer = setInterval(function() {
+                callSeconds++;
+                const minutes = Math.floor(callSeconds / 60);
+                const seconds = callSeconds % 60;
+                document.getElementById('callTimer').textContent = 
+                    `Hablando ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        function stopCallTimer() {
+            if (callTimer) {
+                clearInterval(callTimer);
+                callTimer = null;
+            }
+            document.getElementById('callTimer').textContent = "Hablando 00:00";
+        }
+
+        function toggleMute() {
+            isMuted = !isMuted;
+            const muteButton = document.querySelector('.call-btn.mute');
+            const statusIndicator = document.getElementById('statusIndicator');
+            
+            if (isMuted) {
+                muteButton.innerHTML = '🔊';
+                muteButton.style.background = '#e8f4fd';
+                statusIndicator.textContent = "Micrófono silenciado";
+                
+                if (recognition && isListening) {
+                    recognition.stop();
+                }
+            } else {
+                muteButton.innerHTML = '🔇';
+                muteButton.style.background = '#f8f9fa';
+                statusIndicator.textContent = "Escuchando...";
+                
+                if (recognition && !isListening && !isProcessing && !isSpeaking) {
+                    try {
+                        recognition.start();
+                        isListening = true;
+                    } catch (error) {
+                        console.error('Error reiniciando reconocimiento:', error);
+                    }
+                }
+            }
+        }
+
+        function endCall() {
+            stopVoiceRecognition();
+        }
+
+        function showError(message) {
+            const errorElement = document.getElementById('errorMessage');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+            
+            setTimeout(() => {
+                hideError();
+            }, 8000);
+        }
+
+        function hideError() {
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
