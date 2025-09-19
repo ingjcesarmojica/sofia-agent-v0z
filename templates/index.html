@@ -399,13 +399,10 @@
         let isSpeaking = false;
         let currentTTSMode = 'browser';
         
-        // Detectar si estamos en localhost o en un servidor real
-        const isLocalFile = window.location.protocol === 'file:';
-        
-        // URLs base de la API
-        const API_BASE_URL = isLocalFile ? 'http://localhost:5000' : window.location.origin;
-        const CHAT_API_URL = `${API_BASE_URL}/api/chat`;
-        const SPEAK_API_URL = `${API_BASE_URL}/api/speak`;
+        // URLs base de la API - usar rutas relativas para Render
+        const API_BASE_URL = '';
+        const CHAT_API_URL = '/api/chat';
+        const SPEAK_API_URL = '/api/speak';
         
         console.log("URL base de API:", API_BASE_URL);
         
@@ -416,20 +413,61 @@
         function initializeApp() {
             checkVoiceSupport();
             
-            // Modo offline - no verificar servidor
-            document.getElementById('serverStatus').textContent = 'Modo offline';
-            document.getElementById('serverStatus').className = 'server-status disconnected';
-            showTTSEmergencyMode();
+            // Verificar si estamos en un entorno de producción (Render)
+            const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
             
-            // Mensaje de bienvenida por voz
-            setTimeout(() => {
-                speakText("Hola, mi nombre es Sofia. Soy tu asistente virtual. Estoy en modo offline. ¿En qué puedo ayudarte hoy?");
-            }, 1000);
+            if (isProduction) {
+                // En producción, verificar estado del servidor
+                checkServerStatus();
+            } else {
+                // En desarrollo, mantener el comportamiento actual
+                document.getElementById('serverStatus').textContent = 'Modo offline';
+                document.getElementById('serverStatus').className = 'server-status disconnected';
+                showTTSEmergencyMode();
+                
+                // Mensaje de bienvenida por voz
+                setTimeout(() => {
+                    speakText("Hola, mi nombre es Sofia. Soy tu asistente virtual. Estoy en modo offline. ¿En qué puedo ayudarte hoy?");
+                }, 1000);
+            }
         }
 
         function checkServerStatus() {
-            // No hacer nada en modo offline
-            console.log("Modo offline activado - saltando verificación de servidor");
+            fetch('/api/health')
+                .then(response => response.json())
+                .then(data => {
+                    const statusElement = document.getElementById('serverStatus');
+                    if (data.status === 'healthy') {
+                        statusElement.textContent = 'Conectado al servidor';
+                        statusElement.className = 'server-status connected';
+                        
+                        // Mensaje de bienvenida por voz
+                        setTimeout(() => {
+                            speakText("Hola, mi nombre es Sofia. Soy tu asistente virtual. ¿En qué puedo ayudarte hoy?");
+                        }, 1000);
+                    } else {
+                        statusElement.textContent = 'Servidor con problemas';
+                        statusElement.className = 'server-status disconnected';
+                        showTTSEmergencyMode();
+                        
+                        // Mensaje de bienvenida por voz en modo offline
+                        setTimeout(() => {
+                            speakText("Hola, estoy en modo offline. ¿En qué puedo ayudarte hoy?");
+                        }, 1000);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking server status:', error);
+                    const statusElement = document.getElementById('serverStatus');
+                    statusElement.textContent = 'Error conectando al servidor';
+                    statusElement.className = 'server-status disconnected';
+                    showTTSEmergencyMode();
+                    
+                    // Mensaje de bienvenida por voz en modo offline
+                    setTimeout(() => {
+                        speakText("Hola, estoy en modo offline. ¿En qué puedo ayudarte hoy?");
+                    }, 1000);
+                });
         }
 
         function showTTSEmergencyMode() {
@@ -538,6 +576,34 @@
             const statusIndicator = document.getElementById('statusIndicator');
             statusIndicator.innerHTML = "Procesando<span class='loading-dots'><span></span><span></span><span></span></span>";
             
+            // En producción, intentar conectar al servidor primero
+            const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+            
+            if (isProduction) {
+                fetch(CHAT_API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: message })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    isProcessing = false;
+                    speakText(data.response);
+                })
+                .catch(error => {
+                    console.error('Error al conectar con el servidor:', error);
+                    // Si falla, usar modo offline
+                    useOfflineMode(message);
+                });
+            } else {
+                // En desarrollo, usar modo offline directamente
+                useOfflineMode(message);
+            }
+        }
+
+        function useOfflineMode(message) {
             // Simular respuesta del servidor offline
             setTimeout(() => {
                 let response = "";
@@ -625,8 +691,39 @@
             const statusIndicator = document.getElementById('statusIndicator');
             statusIndicator.textContent = "Hablando...";
             
-            // Modo offline: usar siempre navegador
-            useBrowserTTS(text);
+            // En producción, intentar usar el servidor primero
+            const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+            
+            if (isProduction) {
+                fetch(SPEAK_API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ text: text })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.useBrowserTTS) {
+                        // Si el servidor indica usar el navegador
+                        useBrowserTTS(text);
+                    } else if (data.audioContent) {
+                        // Si el servidor devuelve audio
+                        playAudio(data.audioContent);
+                    } else {
+                        // En caso de cualquier otra situación, usar navegador
+                        useBrowserTTS(text);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al conectar con el servidor TTS:', error);
+                    // Si falla, usar navegador
+                    useBrowserTTS(text);
+                });
+            } else {
+                // En desarrollo, usar navegador directamente
+                useBrowserTTS(text);
+            }
         }
 
         // Función para usar la síntesis de voz del navegador
