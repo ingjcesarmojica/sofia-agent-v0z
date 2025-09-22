@@ -18,8 +18,12 @@ AWS_ACCESS_KEY = os.environ.get("AWS_ACCESS_KEY")
 AWS_SECRET_KEY = os.environ.get("AWS_SECRET_KEY")
 AWS_REGION = os.environ.get("AWS_REGION", "us-east-1")
 
-# Verificar si las credenciales AWS están configuradas
-AWS_CONFIGURED = bool(AWS_ACCESS_KEY and AWS_SECRET_KEY)
+# DEBUG: Verificar configuración AWS
+@app.before_request
+def log_aws_config():
+    app.logger.info(f"AWS_ACCESS_KEY configured: {bool(AWS_ACCESS_KEY)}")
+    app.logger.info(f"AWS_SECRET_KEY configured: {bool(AWS_SECRET_KEY)}")
+    app.logger.info(f"AWS_REGION: {AWS_REGION}")
 
 @app.route('/')
 def index():
@@ -34,9 +38,9 @@ def speak_text():
         if not text:
             return jsonify({'error': 'No text provided'}), 400
         
-        # Modo emergencia si no hay credenciales AWS
-        if not AWS_CONFIGURED:
-            app.logger.warning("Modo emergencia activado - sin credenciales AWS")
+        # Verificación DIRECTA de credenciales (como en appguia.py)
+        if not AWS_ACCESS_KEY or not AWS_SECRET_KEY:
+            app.logger.error("AWS credentials not configured - usando modo navegador")
             return jsonify({
                 'audioContent': None,
                 'audioUrl': None,
@@ -45,18 +49,21 @@ def speak_text():
             })
         
         # Configurar cliente de Polly
+        app.logger.info("Configurando cliente Polly...")
         polly = boto3.client('polly',
                             aws_access_key_id=AWS_ACCESS_KEY,
                             aws_secret_access_key=AWS_SECRET_KEY,
                             region_name=AWS_REGION)
         
         # Sintetizar voz con Polly - voz femenina profesional
+        app.logger.info(f"Sintetizando texto: {text[:50]}...")
         response = polly.synthesize_speech(
             Text=text,
             OutputFormat='mp3',
             VoiceId='Lupe'      # Voz femenina en español latino
-            # Otras voces en español: 'Conchita', 'Enrique', 'Lupe', 'Penelope'
         )
+        
+        app.logger.info("Audio sintetizado correctamente")
         
         # Convertir audio a base64
         audio_data = response['AudioStream'].read()
@@ -64,7 +71,8 @@ def speak_text():
         
         return jsonify({
             'audioContent': audio_content,
-            'audioUrl': f"data:audio/mp3;base64,{audio_content}"
+            'audioUrl': f"data:audio/mp3;base64,{audio_content}",
+            'useBrowserTTS': False
         })
             
     except (BotoCoreError, ClientError) as error:
@@ -176,10 +184,23 @@ def chat():
 @app.route('/api/health', methods=['GET'])
 def health_check():
     """Endpoint para verificar el estado del servicio"""
+    aws_configured = bool(AWS_ACCESS_KEY and AWS_SECRET_KEY)
     return jsonify({
         'status': 'healthy',
-        'aws_configured': AWS_CONFIGURED,
-        'service': 'Amazon Polly - Voz Legal' if AWS_CONFIGURED else 'Modo emergencia - Navegador TTS'
+        'aws_configured': aws_configured,
+        'aws_access_key_set': bool(AWS_ACCESS_KEY),
+        'aws_secret_key_set': bool(AWS_SECRET_KEY),
+        'service': 'Amazon Polly - Voz Legal' if aws_configured else 'Modo emergencia - Navegador TTS'
+    })
+
+@app.route('/api/debug', methods=['GET'])
+def debug_info():
+    """Endpoint para debugging"""
+    return jsonify({
+        'aws_access_key_length': len(AWS_ACCESS_KEY) if AWS_ACCESS_KEY else 0,
+        'aws_secret_key_length': len(AWS_SECRET_KEY) if AWS_SECRET_KEY else 0,
+        'aws_region': AWS_REGION,
+        'environment_variables': {k: v for k, v in os.environ.items() if 'AWS' in k}
     })
 
 if __name__ == '__main__':
