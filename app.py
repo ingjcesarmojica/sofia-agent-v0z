@@ -50,12 +50,12 @@ def speak_text():
                             aws_secret_access_key=AWS_SECRET_KEY,
                             region_name=AWS_REGION)
         
-        # Sintetizar voz con Polly
+        # Sintetizar voz con Polly - voz femenina profesional
         response = polly.synthesize_speech(
             Text=text,
             OutputFormat='mp3',
-            VoiceId='Mia'      # Femenina - Español mexicano  
-            # Otras voces en español: 'Enrique', 'Mia', 'Penelope'
+            VoiceId='Lupe'      # Voz femenina en español latino
+            # Otras voces en español: 'Conchita', 'Enrique', 'Lupe', 'Penelope'
         )
         
         # Convertir audio a base64
@@ -97,45 +97,73 @@ def chat():
         if not message:
             return jsonify({'error': 'No message provided'}), 400
         
-        # Respuestas inteligentes basadas en palabras clave
+        # Respuestas inteligentes basadas en consultas legales
         message_lower = message.lower()
         
-        if any(word in message_lower for word in ['hola', 'buenos días', 'buenas tardes', 'saludos']):
-            response = "¡Hola! Un gusto saludarte. Somos la Fundación VANALI. Nuestro objetivo social es apoyar el emprendimiento de las mujeres cabeza de familia a través de cursos de manualidades."
-        elif any(word in message_lower for word in ['curso', 'cursos', 'ofrecen', 'qué hacen', 'muñeco', 'noel']):
-            response = "Actualmente estamos dictando dos cursos muy especiales y navideños:\n1. Curso de Muñeco Papá Noel.\n2. Curso de Muñeco Mamá Noel."
-        elif any(word in message_lower for word in ['dónde', 'donde', 'ubicación', 'ubicacion', 'ubicada', 'lugar', 'dirección', 'direccion', 'dirigirme', 'local', 'sitio', 'fusagasugá', 'fusagasuga', 'barrio', 'gaitán', 'gaitan', 'colegio', 'manuel', 'humberto', 'conjunto', 'andalucía', 'andaluci', 'andalucia']):
-            response = "Los cursos son presenciales en la ciudad de Fusagasugá. Las clases se dictan en el Conjunto Andalucía, ubicado en el barrio Gaitán, específicamente frente al Colegio Manuel Humberto. ¡Es muy fácil de encontrar!"
-        elif any(word in message_lower for word in ['profesor', 'profesora', 'quién enseña', 'imparte', 'rocío']):
-            response = "Nuestros cursos son impartidos por la profesora Rocío, una experta en creación de muñecos y manualidades con más de 20 años de experiencia. ¡Aprenderás muchísimo con ella!"
-        elif any(word in message_lower for word in ['inscribir', 'inscripción', 'requisitos', 'cómo me inscribo']):
-            response = "Lo primero es realizar tu inscripción a través de nuestros canales de servicio oficiales. Con gusto te puedo proporcionar los contactos para que completes tu proceso."
-        elif any(word in message_lower for word in ['materiales', 'incluidos', 'comprar', 'llevar']):
-            response = "Para que te centres solo en aprender, el valor del curso incluye todos los materiales necesarios para elaborar tus muñecos. Sin embargo, si lo prefieres, también puedes adquirirlos por tu cuenta."
-        elif any(word in message_lower for word in ['dura', 'duración', 'horas', 'clases', 'semanas']):
-            response = "La duración es la siguiente:\n- Curso de Papá Noel: 4 clases de 2 horas cada una.\n- Curso de Mamá Noel: 5 clases de 2 horas cada una.\nAmbos se pueden tomar los días martes y jueves."
-        elif any(word in message_lower for word in ['horario', 'horarios', 'cuándo', 'cuando', 'días', 'dias', 'tarde', 'mañana', 'manana', 'noche', 'hora', 'horas', 'inicio', 'comienza', 'empieza', 'termina', 'finaliza', 'duración', 'duracion', 'lunes', 'martes', 'miércoles', 'miercoles', 'jueves', 'viernes', 'sábado', 'sabado', 'domingo', 'fin de semana', 'weekend', 'turno', 'jornada', 'disponibilidad', 'disponible']):
-            response = "Tenemos dos horarios disponibles para tu comodidad:\n1. Horario de la mañana: de 9:00 a. m. a 11:00 a. m., de lunes a viernes.\n2. Horario de la tarde: de 3:00 p. m. a 5:00 p. m., de lunes a viernes."
-        elif any(word in message_lower for word in ['certificado', 'premio', 'recibo', 'finalizar', 'ganador']):
-            response = "¡Por supuesto! Al finalizar, recibirás un certificado que acredita el curso recibido. Además, ¡hay un premio especial si tu muñeco es calificado como el ganador del curso!"
-        elif any(word in message_lower for word in ['precio', 'costo', 'valor', 'cuánto cuesta', 'tarifa']):
-            response = "Para conocer los precios actualizados y toda la información sobre costos, te recomiendo contactar directamente a nuestra instructora Rocío por WhatsApp. Ella te dará todos los detalles personalizados. Da click en el icono de whatsapp, el sistema te comunicará automáticamente con ella"
+        # Saludos y presentación
+        if any(word in message_lower for word in ['hola', 'buenos días', 'buenas tardes', 'saludos', 'buenos', 'buenas']):
+            response = "Hola, soy Claudia García, abogada especializada en derecho civil y familiar. Estoy aquí para brindarte asesoría legal profesional. ¿En qué asunto legal puedo ayudarte hoy?"
         
-        # NUEVAS PREGUNTAS SOBRE FECHAS
-        elif any(word in message_lower for word in ['fecha', 'fechas', 'cuándo empieza', 'cuando inician los cursos', 'cuándo comienza', 'cuando comienzan', 'inicio del curso', 'cuando inicia el curso', 'próximo curso', 'proximo curso', 'cuando inicia', 'cuando inician', 'día de inicio', 'dia de inicio', 'empezar', 'comenzar', 'iniciar', 'arranque', 'cuándo arranca', 'cuando arranca']):
-            response = "Para saber qué fecha es la más próxima contáctate vía WhatsApp"
-        elif any(word in message_lower for word in ['me dices cuando comienzan', 'dime cuando comienzan', 'cuando comienzan', 'cuándo comienzan', 'me dices cuando empiezan', 'dime cuando empiezan', 'cuando empiezan', 'cuándo empiezan', 'me dices la fecha', 'dime la fecha', 'quiero saber la fecha', 'necesito saber la fecha', 'información de fechas', 'informacion de fechas', 'fechas de inicio', 'cuando son las clases', 'cuándo son las clases']):
-            response = "Para saber qué fecha es la más próxima contáctate vía WhatsApp, por favor"
+        # Consultas sobre divorcio
+        elif any(word in message_lower for word in ['divorcio', 'separación', 'separacion', 'matrimonio', 'esposo', 'esposa', 'cónyuge', 'conyugue']):
+            response = "Entiendo que necesitas asesoría sobre divorcio. Te puedo ayudar con el proceso completo: evaluación de bienes conyugales, custodia de menores, pensión alimentaria y todos los trámites legales. ¿Tu situación requiere divorcio de mutuo acuerdo o contencioso?"
         
-        elif any(word in message_lower for word in ['gracias', 'muchas gracias', 'mil gracias', 'gracias rocio', 'gracias rocio', 'agradecer', 'agradecido', 'agradecida', 'amable', 'thanks', 'thank you', 'merci', 'te lo agradezco', 'se lo agradezco', 'appreciate', 'agradecimiento', 'valoro', 'agradecimiento', 'excelente ayuda', 'buena ayuda', 'muy amable', 'que amable', 'eres muy amable', 'muy agradecido', 'muy agradecida', 'perfecto', 'genial', 'fantástico', 'fantastico', 'estupendo', 'increíble', 'increible', 'brutal', 'chévere', 'chevere', 'cool', 'ok', 'okay', 'vale', 'listo', 'de acuerdo', 'entendido', 'comprendido', 'excelente', 'bien', 'good', 'nice', 'awesome', 'great']):
-            response = "¡Es un placer ayudarte! Estoy aquí para lo que necesites. ¿Hay algo más en lo que pueda asistirte?"
+        # Consultas sobre custodia de menores
+        elif any(word in message_lower for word in ['custodia', 'hijos', 'menor', 'menores', 'patria potestad', 'visitas', 'régimen de visitas']):
+            response = "En temas de custodia, mi prioridad es siempre el bienestar superior del menor. Te asesoro sobre custodia compartida, patria potestad, régimen de visitas y modificación de acuerdos. ¿Cuál es la situación específica con tus hijos?"
+        
+        # Consultas sobre pensión alimentaria
+        elif any(word in message_lower for word in ['pensión', 'pension', 'alimentaria', 'cuota alimentaria', 'cuota', 'alimentos', 'manutención', 'manutencion']):
+            response = "Para pensión alimentaria, calculo el monto según los ingresos del obligado y las necesidades del beneficiario. Te ayudo a solicitarla, aumentarla, disminuirla o ejecutarla si hay incumplimiento. ¿Necesitas solicitar o modificar una pensión?"
+        
+        # Consultas sobre herencias y sucesiones
+        elif any(word in message_lower for word in ['herencia', 'sucesión', 'sucesion', 'testamento', 'herederos', 'bienes', 'inventario', 'liquidación', 'liquidacion']):
+            response = "En procesos sucesorales te asesoro sobre inventario y avalúo de bienes, liquidación de herencia, interpretación de testamentos y resolución de conflictos entre herederos. ¿El proceso es con o sin testamento?"
+        
+        # Consultas sobre derecho civil general
+        elif any(word in message_lower for word in ['contrato', 'demanda', 'civil', 'responsabilidad', 'daños', 'perjuicios', 'incumplimiento']):
+            response = "En derecho civil manejo contratos, responsabilidad civil, demandas por incumplimiento, daños y perjuicios, y resolución de conflictos patrimoniales. ¿Qué tipo de situación civil estás enfrentando?"
+        
+        # Consultas sobre derecho laboral
+        elif any(word in message_lower for word in ['laboral', 'trabajo', 'despido', 'liquidación', 'liquidacion', 'acoso', 'discriminación', 'discriminacion']):
+            response = "Te asesoro en temas laborales: despidos injustificados, cálculo de liquidaciones, acoso laboral, discriminación y protección de derechos del trabajador. ¿Qué situación laboral necesitas resolver?"
+        
+        # Consultas sobre honorarios y costos
+        elif any(word in message_lower for word in ['precio', 'costo', 'honorarios', 'cuánto cuesta', 'cuanto cuesta', 'tarifa', 'valor', 'pago']):
+            response = "Mis honorarios varían según la complejidad del caso. Ofrezco primera consulta gratuita donde evaluamos tu situación legal completa. Para casos complejos, manejo cuotas accesibles y planes de pago. ¿Te gustaría agendar tu consulta gratuita?"
+        
+        # Consultas sobre citas y consultas
+        elif any(word in message_lower for word in ['consulta', 'cita', 'reunión', 'reunion', 'agendar', 'horario', 'disponibilidad']):
+            response = "Perfecto, podemos agendar tu consulta legal. Ofrezco atención presencial en mi oficina y consultas virtuales. La primera consulta es completamente gratuita para evaluar tu caso. ¿Prefieres atención presencial o virtual?"
+        
+        # Consultas sobre documentos necesarios
+        elif any(word in message_lower for word in ['documentos', 'papeles', 'necesito', 'llevar', 'requisitos', 'qué debo', 'que debo']):
+            response = "Los documentos necesarios dependen de tu caso específico. Generalmente necesitamos: cédulas, certificados de matrimonio/nacimiento, escrituras de bienes, contratos relevantes y cualquier comunicación relacionada. En la consulta te daré la lista exacta."
+        
+        # Consultas sobre urgencias
+        elif any(word in message_lower for word in ['urgente', 'emergencia', 'rápido', 'rapido', 'inmediato', 'ya', 'pronto']):
+            response = "Entiendo que tu situación requiere atención urgente. Manejo casos de emergencia legal. Para situaciones críticas, podemos agendar consulta prioritaria el mismo día. ¿Puedes contarme brevemente qué situación urgente enfrentas?"
+        
+        # Consultas sobre medidas cautelares
+        elif any(word in message_lower for word in ['cautelar', 'embargo', 'secuestro', 'protección', 'proteccion', 'medida', 'urgente']):
+            response = "Las medidas cautelares protegen tus derechos durante el proceso legal. Puedo solicitar embargos, secuestros de bienes, medidas de protección y otras medidas preventivas según tu caso. ¿Qué bienes o derechos necesitas proteger?"
+        
+        # Consultas sobre violencia intrafamiliar
+        elif any(word in message_lower for word in ['violencia', 'maltrato', 'agresión', 'agresion', 'amenaza', 'protección', 'proteccion']):
+            response = "La violencia intrafamiliar es un tema muy serio. Te ayudo a solicitar medidas de protección inmediatas, denunciar ante las autoridades y proteger tus derechos y los de tus hijos. Tu seguridad es lo primero. ¿Estás en situación de riesgo actual?"
+        
+        # Agradecimientos
+        elif any(word in message_lower for word in ['gracias', 'muchas gracias', 'agradezco', 'agradecido', 'agradecida', 'excelente', 'perfecto', 'muy bien']):
+            response = "Ha sido un placer asesorarte. Como tu abogada, estaré aquí para proteger tus derechos legales cuando lo necesites. No dudes en contactarme para cualquier consulta jurídica adicional."
+        
+        # Respuesta por defecto
         else:
             responses = [
-                "Entiendo tu consulta sobre nuestros cursos. Te recomiendo contactar directamente a nuestra instructora Rocío por WhatsApp. Ella te dará todos los detalles personalizados. Da click en el icono de whatsapp, el sistema te comunicará automáticamente con ella.",
-                "Gracias por tu mensaje. Para información más específica y personalizada, te sugiero comunicarte con nuestra instructora Rocío por WhatsApp. Da click en el icono de whatsapp y el sistema te conectará directamente con ella.",
-                "Comprendo tu pregunta sobre la Fundación VANALI. Para una atención más detallada, te recomiendo contactar a Rocío por WhatsApp. Solo da click en el icono de whatsapp y serás atendido personalmente.",
-                "Excelente pregunta sobre nuestros cursos. Para brindarte la mejor atención personalizada, te sugerimos contactar a nuestra instructora Rocío por WhatsApp. Da click en el icono de whatsapp y el sistema te comunicará automáticamente con ella.",
-                "Tomo nota de tu consulta. Para resolver tus dudas de manera más específica, te recomendamos contactar directamente con Rocío por WhatsApp. Da click en el icono de whatsapp y serás atendido personalmente."
+                "Como tu abogada, necesito conocer más detalles sobre tu situación legal para brindarte el mejor asesoramiento jurídico. ¿Podrías contarme específicamente qué problema legal enfrentas?",
+                "Para proporcionarte una asesoría legal precisa y profesional, me gustaría conocer más sobre tu caso. ¿Se trata de un tema familiar, civil, laboral o de otra área del derecho?",
+                "Cada caso legal es único y requiere análisis personalizado. Te sugiero agendar una consulta gratuita donde revisaremos todos los aspectos legales de tu situación. ¿Cuándo te vendría bien reunirnos?",
+                "Mi experiencia me permite asesorarte en diversas áreas del derecho. Para brindarte la mejor estrategia legal, necesitaríamos revisar la documentación y detalles específicos de tu caso. ¿Te gustaría programar una cita?",
+                "Entiendo tu consulta y quiero ayudarte de la mejor manera. En derecho, los detalles hacen la diferencia. ¿Podrías contarme más sobre los hechos y qué resultado buscas obtener?"
             ]
             response = responses[len(message) % len(responses)]
         
@@ -151,7 +179,7 @@ def health_check():
     return jsonify({
         'status': 'healthy',
         'aws_configured': AWS_CONFIGURED,
-        'service': 'Amazon Polly' if AWS_CONFIGURED else 'Modo emergencia - Navegador TTS'
+        'service': 'Amazon Polly - Voz Legal' if AWS_CONFIGURED else 'Modo emergencia - Navegador TTS'
     })
 
 if __name__ == '__main__':
