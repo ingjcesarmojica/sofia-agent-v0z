@@ -467,7 +467,7 @@
                 
                 statusIndicator.innerHTML = "Procesando<span class='loading-dots'><span></span><span></span><span></span></span>";
                 
-                // Usar función offline en lugar de fetch
+                // Usar función que se conecta al backend
                 sendChatMessage(transcript);
             };
             
@@ -519,6 +519,7 @@
             const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
             
             if (isProduction) {
+                // LLAMADA REAL AL BACKEND - similar a guia.html
                 fetch(CHAT_API_URL, {
                     method: 'POST',
                     headers: {
@@ -526,10 +527,22 @@
                     },
                     body: JSON.stringify({ message: message })
                 })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error en la respuesta del servidor');
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     isProcessing = false;
-                    speakText(data.response);
+                    
+                    if (data.error) {
+                        showError("Lo siento, hubo un error procesando tu mensaje. Por favor, intenta nuevamente.");
+                        return;
+                    }
+                    
+                    const response = data.response;
+                    speakText(response);
                 })
                 .catch(error => {
                     console.error('Error al conectar con el servidor:', error);
