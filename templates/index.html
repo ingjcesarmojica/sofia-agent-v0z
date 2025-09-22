@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sofia - Asistente Virtual</title>
+    <title>Claudia García - Abogada</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -13,64 +14,59 @@
         }
         
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: white;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
             min-height: 100vh;
             display: flex;
-            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
         }
         
-        .container {
-            background: white;
-            width: 100%;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
+        .phone-container {
+            width: 280px;
+            height: 600px;
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            border-radius: 30px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
         }
         
         .header {
-            background: white;
-            color: #2c3e50;
-            padding: 20px 20px 15px;
             text-align: center;
+            padding: 40px 20px 30px;
             position: relative;
-            flex-shrink: 0;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            height: 100vh;
         }
         
         .logo-container {
             display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 25px;
-            position: absolute;
-            top: 20px;
-            left: 0;
-            right: 0;
-        }
-        
-        .logo {
-            height: 40px;
-            width: auto;
-            max-width: 85%;
-        }
-        
-        .main-content {
-            display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            flex: 1;
-            padding-top: 80px;
+            margin-bottom: 30px;
+        }
+        
+        .scales-icon {
+            width: 30px;
+            height: 30px;
+            margin-right: 10px;
+        }
+        
+        .logo-text {
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .profile-section {
+            text-align: center;
+            position: relative;
         }
         
         .avatar-container {
-            margin: 0 auto 15px;
             width: 120px;
             height: 120px;
+            margin: 0 auto 20px;
             position: relative;
         }
         
@@ -78,148 +74,140 @@
             width: 100%;
             height: 100%;
             border-radius: 50%;
-            border: 3px solid #e0e0e0;
-            background: #e0e0e0 url('https://bidamericas.com/tusabogados/foto.png') center/cover;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            background: #e2e8f0 url('https://images.unsplash.com/photo-1594824804732-5cad2448c4af?w=120&h=120&fit=crop&crop=face') center/cover;
             position: relative;
             z-index: 2;
         }
         
-        .pulse-ring {
+        .pulse-rings {
             position: absolute;
-            top: -5px;
-            left: -5px;
-            right: -5px;
-            bottom: -5px;
-            border: 2px solid #3498db;
-            border-radius: 50%;
-            opacity: 0;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 160px;
+            height: 160px;
             z-index: 1;
-            animation: none;
+            opacity: 0;
         }
         
-        .pulse-ring.active {
-            animation: pulse 2s infinite;
+        .pulse-rings.active {
+            opacity: 1;
+        }
+        
+        .pulse-ring {
+            position: absolute;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            width: 100%;
+            height: 100%;
+            animation: pulse 2s ease-out infinite;
+        }
+        
+        .pulse-ring:nth-child(2) {
+            animation-delay: 0.3s;
+        }
+        
+        .pulse-ring:nth-child(3) {
+            animation-delay: 0.6s;
         }
         
         @keyframes pulse {
             0% {
-                transform: scale(0.95);
+                transform: scale(0.75);
                 opacity: 0.8;
             }
-            70% {
-                transform: scale(1.1);
-                opacity: 0;
-            }
             100% {
-                transform: scale(1.1);
+                transform: scale(1.2);
                 opacity: 0;
             }
         }
         
-        h1 {
-            font-size: 24px;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #2c3e50;
-        }
-        
-        .subtitle {
-            font-size: 16px;
-            color: #7f8c8d;
-            margin-bottom: 20px;
-        }
-        
-        .status-indicator {
-            display: inline-block;
-            background: #f1f2f6;
-            padding: 8px 15px;
-            border-radius: 18px;
-            font-size: 13px;
-            margin-top: 15px;
-            color: #7f8c8d;
-        }
-        
-        .talk-button {
-            display: block;
-            background: #3498db;
+        .profile-name {
+            font-size: 22px;
+            font-weight: 700;
             color: white;
-            border: none;
-            border-radius: 25px;
-            padding: 14px 30px;
-            margin: 15px auto 10px;
-            cursor: pointer;
-            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .profile-title {
             font-size: 16px;
-            transition: all 0.3s;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 500;
+            margin-bottom: 40px;
         }
         
-        .talk-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(0,0,0,0.2);
-            background: #2980b9;
-        }
-        
-        .talk-button.listening {
-            background: #e74c3c;
-            animation: pulse 1.5s infinite;
-        }
-        
-        .call-status {
-            display: none;
-            margin-top: 20px;
-            text-align: center;
-        }
-        
-        .call-status.active {
-            display: block;
-        }
-        
-        .call-timer {
-            font-size: 17px;
-            font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 20px;
-        }
-        
-        .call-controls {
-            display: flex;
-            justify-content: center;
-            gap: 25px;
-            margin-top: 15px;
-        }
-        
-        .call-btn {
-            background: #f8f9fa;
-            border: 1px solid #e0e0e0;
+        .action-button {
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
-            width: 55px;
-            height: 55px;
+            border: none;
+            cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin: 0 auto;
+            transition: all 0.3s ease;
+            font-size: 24px;
+            position: relative;
+            z-index: 3;
         }
         
-        .call-btn:hover {
-            background: #e8f4fd;
-            transform: scale(1.05);
-        }
-        
-        .call-btn.mute {
-            color: #7f8c8d;
-        }
-        
-        .call-btn.end {
-            background: #e74c3c;
+        .whatsapp-button {
+            background: #25d366;
             color: white;
         }
         
-        .call-btn.end:hover {
-            background: #c0392b;
+        .whatsapp-button:hover {
+            background: #128c7e;
+            transform: scale(1.05);
+        }
+        
+        .end-call-button {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .end-call-button:hover {
+            background: #dc2626;
+            transform: scale(1.05);
+        }
+        
+        .button-label {
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            margin-top: 15px;
+            text-align: center;
+        }
+        
+        .status-indicator {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .error-message {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            background: rgba(239, 68, 68, 0.9);
+            color: white;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 12px;
+            text-align: center;
+            display: none;
+            z-index: 10;
         }
         
         .loading-dots {
@@ -229,11 +217,11 @@
         
         .loading-dots span {
             display: inline-block;
-            width: 6px;
-            height: 6px;
+            width: 4px;
+            height: 4px;
             border-radius: 50%;
-            background-color: #3498db;
-            margin: 0 2px;
+            background-color: rgba(255, 255, 255, 0.9);
+            margin: 0 1px;
             animation: bounce 1.5s infinite ease-in-out both;
         }
         
@@ -254,54 +242,31 @@
             }
         }
         
-        .error-message {
-            background: #ffe6e6;
-            color: #d63031;
-            padding: 10px 15px;
-            border-radius: 8px;
-            margin: 15px 0;
-            font-size: 14px;
+        /* Estados de la interfaz */
+        .interface-state {
+            transition: all 0.3s ease;
+        }
+        
+        .interface-state.calling .pulse-rings {
+            opacity: 1;
+        }
+        
+        .interface-state.calling .whatsapp-button {
             display: none;
-            max-width: 300px;
-            text-align: center;
         }
         
-        .server-status {
-            position: fixed;
-            bottom: 10px;
-            right: 10px;
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-size: 12px;
-            z-index: 1000;
+        .interface-state.calling .end-call-button {
+            display: flex;
         }
         
-        .server-status.connected {
-            background: #d4edda;
-            color: #155724;
+        .interface-state:not(.calling) .end-call-button {
+            display: none;
         }
         
-        .server-status.disconnected {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        
-        .tts-mode {
-            position: fixed;
-            bottom: 10px;
-            left: 10px;
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-size: 12px;
-            z-index: 1000;
-            background: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeaa7;
-        }
-        
-        @media (max-width: 480px) {
-            .header {
-                padding: 15px 15px 10px;
+        @media (max-width: 320px) {
+            .phone-container {
+                width: 260px;
+                height: 560px;
             }
             
             .avatar-container {
@@ -309,102 +274,73 @@
                 height: 100px;
             }
             
-            h1 {
-                font-size: 22px;
+            .profile-name {
+                font-size: 20px;
             }
             
-            .subtitle {
-                font-size: 15px;
-            }
-            
-            .talk-button {
-                padding: 12px 25px;
-                font-size: 15px;
-            }
-            
-            .call-btn {
-                width: 50px;
-                height: 50px;
-            }
-            
-            .status-indicator {
-                font-size: 12px;
-                padding: 6px 12px;
-            }
-            
-            .server-status {
-                bottom: 5px;
-                right: 5px;
-                font-size: 10px;
-            }
-            
-            .tts-mode {
-                bottom: 5px;
-                left: 5px;
-                font-size: 10px;
+            .profile-title {
+                font-size: 14px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="phone-container">
+        <div class="error-message" id="errorMessage"></div>
+        
         <div class="header">
             <div class="logo-container">
-                <img src="https://bidamericas.com/tusabogados/civil/images/logo.png" alt="Fusa Abogados" class="logo">
+                <svg class="scales-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2L13.09 8.26L22 9L13.09 9.74L12 16L10.91 9.74L2 9L10.91 8.26L12 2M8 11.5L6.5 16.5L11.5 17.2L13 12.2L8 11.5M16 11.5L13 12.2L14.5 17.2L19.5 16.5L18 11.5L16 11.5Z"/>
+                </svg>
+                <div class="logo-text">tusabogados.com</div>
             </div>
             
-            <div class="main-content">
+            <div class="profile-section interface-state" id="interfaceState">
                 <div class="avatar-container">
                     <div class="avatar"></div>
-                    <div class="pulse-ring" id="pulseRing"></div>
-                </div>
-                
-                <h1>Sofia</h1>
-                <p class="subtitle">Representante de atención al cliente</p>
-                
-                <div class="error-message" id="errorMessage"></div>
-                
-                <button class="talk-button" id="talkButton" onclick="toggleVoiceRecognition()">
-                    🎤 Hablar con Sofia
-                </button>
-                
-                <div class="status-indicator" id="statusIndicator">Voz lista</div>
-                
-                <div class="call-status" id="callStatus">
-                    <div class="call-timer" id="callTimer">Hablando 00:00</div>
-                    <div class="call-controls">
-                        <div class="call-btn mute" onclick="toggleMute()">
-                            🔇
-                        </div>
-                        <div class="call-btn end" onclick="endCall()">
-                            📞
-                        </div>
+                    <div class="pulse-rings" id="pulseRings">
+                        <div class="pulse-ring"></div>
+                        <div class="pulse-ring"></div>
+                        <div class="pulse-ring"></div>
                     </div>
                 </div>
+                
+                <div class="profile-name">Claudia García</div>
+                <div class="profile-title">Abogada</div>
+                
+                <button class="action-button whatsapp-button" id="whatsappButton" onclick="startCall()">
+                    <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.520-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.570-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.525 3.585"/>
+                    </svg>
+                </button>
+                
+                <button class="action-button end-call-button" id="endCallButton" onclick="endCall()">
+                    <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
+                        <path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08c-.18-.17-.29-.42-.29-.7 0-.28.11-.53.29-.71C3.34 8.78 7.46 7 12 7s8.66 1.78 11.71 4.67c.18.18.29.43.29.71 0 .28-.11.53-.29.7l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.1-.7-.28-.79-.73-1.68-1.36-2.66-1.85-.33-.16-.56-.51-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"/>
+                    </svg>
+                </button>
+                
+                <div class="button-label" id="buttonLabel">Marcar</div>
             </div>
         </div>
+        
+        <div class="status-indicator" id="statusIndicator">Listo para hablar</div>
     </div>
-
-    <div class="server-status" id="serverStatus">Modo offline</div>
-    <div class="tts-mode" id="ttsMode">Modo emergencia: Voz del navegador</div>
 
     <script>
         let voiceSupported = false;
         let recognition = null;
         let isListening = false;
-        let callTimer = null;
-        let callSeconds = 0;
-        let isMuted = false;
         let isProcessing = false;
         let isSpeaking = false;
         let currentTTSMode = 'browser';
+        let isCalling = false;
         
         // URLs base de la API - usar rutas relativas para Render
         const API_BASE_URL = '';
         const CHAT_API_URL = '/api/chat';
         const SPEAK_API_URL = '/api/speak';
-        
-        console.log("URL base de API:", API_BASE_URL);
         
         document.addEventListener('DOMContentLoaded', function() {
             initializeApp();
@@ -421,13 +357,11 @@
                 checkServerStatus();
             } else {
                 // En desarrollo, mantener el comportamiento actual
-                document.getElementById('serverStatus').textContent = 'Modo offline';
-                document.getElementById('serverStatus').className = 'server-status disconnected';
                 showTTSEmergencyMode();
                 
                 // Mensaje de bienvenida por voz
                 setTimeout(() => {
-                    speakText("Hola, mi nombre es Sofia. Soy tu asistente virtual. Estoy en modo offline. ¿En qué puedo ayudarte hoy?");
+                    speakText("Hola, soy Claudia García, tu abogada virtual. ¿En qué puedo ayudarte hoy?");
                 }, 1000);
             }
         }
@@ -436,18 +370,12 @@
             fetch('/api/health')
                 .then(response => response.json())
                 .then(data => {
-                    const statusElement = document.getElementById('serverStatus');
                     if (data.status === 'healthy') {
-                        statusElement.textContent = 'Conectado al servidor';
-                        statusElement.className = 'server-status connected';
-                        
                         // Mensaje de bienvenida por voz
                         setTimeout(() => {
-                            speakText("Hola, mi nombre es Sofia. Soy tu asistente virtual. ¿En qué puedo ayudarte hoy?");
+                            speakText("Hola, soy Claudia García, tu abogada virtual. ¿En qué puedo ayudarte hoy?");
                         }, 1000);
                     } else {
-                        statusElement.textContent = 'Servidor con problemas';
-                        statusElement.className = 'server-status disconnected';
                         showTTSEmergencyMode();
                         
                         // Mensaje de bienvenida por voz en modo offline
@@ -458,9 +386,6 @@
                 })
                 .catch(error => {
                     console.error('Error checking server status:', error);
-                    const statusElement = document.getElementById('serverStatus');
-                    statusElement.textContent = 'Error conectando al servidor';
-                    statusElement.className = 'server-status disconnected';
                     showTTSEmergencyMode();
                     
                     // Mensaje de bienvenida por voz en modo offline
@@ -472,9 +397,6 @@
 
         function showTTSEmergencyMode() {
             currentTTSMode = 'browser';
-            const ttsModeElement = document.getElementById('ttsMode');
-            ttsModeElement.style.display = 'block';
-            ttsModeElement.textContent = 'Modo emergencia: Usando voz del navegador';
         }
 
         function checkVoiceSupport() {
@@ -482,20 +404,11 @@
             
             if (!voiceSupported) {
                 document.getElementById('statusIndicator').textContent = "Voz no compatible";
-                document.getElementById('talkButton').style.display = 'none';
                 showError("Tu navegador no soporta reconocimiento de voz. Por favor usa Chrome o Edge.");
             }
         }
 
-        function toggleVoiceRecognition() {
-            if (isListening) {
-                stopVoiceRecognition();
-            } else {
-                startVoiceRecognition();
-            }
-        }
-
-        function startVoiceRecognition() {
+        function startCall() {
             if (!voiceSupported) {
                 showError("El reconocimiento de voz no es compatible con tu navegador. Usa Chrome o Edge.");
                 return;
@@ -506,9 +419,32 @@
                 return;
             }
 
-            const talkButton = document.getElementById('talkButton');
-            const pulseRing = document.getElementById('pulseRing');
-            const callStatus = document.getElementById('callStatus');
+            isCalling = true;
+            const interfaceState = document.getElementById('interfaceState');
+            const buttonLabel = document.getElementById('buttonLabel');
+            const statusIndicator = document.getElementById('statusIndicator');
+            
+            interfaceState.classList.add('calling');
+            buttonLabel.textContent = 'Finalizar';
+            statusIndicator.textContent = 'Escuchando...';
+            
+            startVoiceRecognition();
+        }
+
+        function endCall() {
+            isCalling = false;
+            const interfaceState = document.getElementById('interfaceState');
+            const buttonLabel = document.getElementById('buttonLabel');
+            const statusIndicator = document.getElementById('statusIndicator');
+            
+            interfaceState.classList.remove('calling');
+            buttonLabel.textContent = 'Marcar';
+            statusIndicator.textContent = 'Listo para hablar';
+            
+            stopVoiceRecognition();
+        }
+
+        function startVoiceRecognition() {
             const statusIndicator = document.getElementById('statusIndicator');
             
             recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
@@ -518,14 +454,8 @@
             
             recognition.onstart = function() {
                 isListening = true;
-                talkButton.textContent = "🛑 Detener conversación";
-                talkButton.classList.add('listening');
-                pulseRing.classList.add('active');
-                callStatus.classList.add('active');
                 statusIndicator.textContent = "Escuchando...";
                 hideError();
-                
-                startCallTimer();
             };
             
             recognition.onresult = function(event) {
@@ -546,18 +476,27 @@
                 if (event.error !== 'no-speech' && event.error !== 'aborted') {
                     showError("Error de reconocimiento: " + event.error);
                 }
-                stopVoiceRecognition();
+                if (isCalling) {
+                    setTimeout(() => {
+                        if (isCalling && !isProcessing && !isSpeaking) {
+                            try {
+                                recognition.start();
+                            } catch (error) {
+                                console.error('Error reiniciando reconocimiento:', error);
+                            }
+                        }
+                    }, 1000);
+                }
             };
             
             recognition.onend = function() {
                 console.log("Reconocimiento finalizado");
-                if (isListening && !isProcessing && !isSpeaking) {
+                if (isListening && !isProcessing && !isSpeaking && isCalling) {
                     console.log("Reiniciando reconocimiento...");
                     try {
                         recognition.start();
                     } catch (error) {
                         console.error('Error reiniciando reconocimiento:', error);
-                        stopVoiceRecognition();
                     }
                 }
             };
@@ -604,52 +543,46 @@
         }
 
         function useOfflineMode(message) {
-            // Simular respuesta del servidor offline
+            // Simular respuesta del servidor offline con respuestas legales
             setTimeout(() => {
                 let response = "";
                 const messageLower = message.toLowerCase();
                 
                 if (messageLower.includes('hola') || messageLower.includes('buenos') || messageLower.includes('saludos')) {
-                    response = "¡Hola! Un gusto saludarte. Somos la Fundación VANALI. Nuestro objetivo social es apoyar el emprendimiento de las mujeres cabeza de familia a través de cursos de manualidades.";
+                    response = "Hola, soy Claudia García, abogada especializada en derecho civil y familiar. ¿En qué asunto legal puedo asesorarte hoy?";
                 }
-                else if (messageLower.includes('curso') || messageLower.includes('muñeco') || messageLower.includes('noel')) {
-                    response = "Actualmente estamos dictando dos cursos muy especiales y navideños:\n1. Curso de Muñeco Papá Noel.\n2. Curso de Muñeco Mamá Noel.";
+                else if (messageLower.includes('divorcio') || messageLower.includes('separación')) {
+                    response = "Entiendo que necesitas asesoría sobre divorcio. Podemos revisar tu caso, evaluar los bienes conyugales, custodia de hijos y pensión alimentaria. ¿Cuál es tu situación específica?";
                 }
-                else if (messageLower.includes('dónde') || messageLower.includes('donde') || messageLower.includes('ubicación') || messageLower.includes('fusagasugá')) {
-                    response = "Los cursos son presenciales en Fusagasugá. Clases en el Conjunto Andalucía, barrio Gaitán, frente al Colegio Manuel Humberto.";
+                else if (messageLower.includes('custodia') || messageLower.includes('hijos') || messageLower.includes('menor')) {
+                    response = "En temas de custodia, siempre priorizamos el bienestar del menor. Podemos trabajar en custodia compartida, patria potestad y régimen de visitas. Te ayudo a proteger los derechos de tus hijos.";
                 }
-                else if (messageLower.includes('profesor') || messageLower.includes('rocío')) {
-                    response = "Nuestros cursos son impartidos por la profesora Rocío, experta en manualidades con más de 20 años de experiencia.";
+                else if (messageLower.includes('pensión') || messageLower.includes('alimentaria') || messageLower.includes('cuota')) {
+                    response = "Para pensión alimentaria, calcularemos el monto según los ingresos del obligado y las necesidades del beneficiario. Puedo ayudarte tanto a solicitarla como a modificarla o defenderla.";
                 }
-                else if (messageLower.includes('inscribir') || messageLower.includes('requisitos')) {
-                    response = "Para inscribirte, contacta a Rocío por WhatsApp a través del icono de la aplicación.";
+                else if (messageLower.includes('herencia') || messageLower.includes('sucesión') || messageLower.includes('testamento')) {
+                    response = "En procesos sucesorales, te asesoro sobre inventario de bienes, liquidación de herencia, testamentos y resolución de conflictos entre herederos. ¿Hay algún aspecto específico que te preocupa?";
                 }
-                else if (messageLower.includes('materiales') || messageLower.includes('incluidos')) {
-                    response = "El curso incluye todos los materiales necesarios. También puedes adquirirlos por tu cuenta si prefieres.";
+                else if (messageLower.includes('contrato') || messageLower.includes('demanda') || messageLower.includes('civil')) {
+                    response = "En derecho civil, manejo contratos, responsabilidad civil, demandas por incumplimiento y daños. Puedo revisar tu situación y determinar la mejor estrategia legal.";
                 }
-                else if (messageLower.includes('dura') || messageLower.includes('horas')) {
-                    response = "Duración:\n- Papá Noel: 4 clases de 2 horas\n- Mamá Noel: 5 clases de 2 horas\nMartes y jueves";
+                else if (messageLower.includes('laboral') || messageLower.includes('trabajo') || messageLower.includes('despido')) {
+                    response = "Para temas laborales, te asesoro sobre despidos injustificados, liquidaciones, acoso laboral y derechos del trabajador. ¿Qué situación específica estás enfrentando?";
                 }
-                else if (messageLower.includes('horario') || messageLower.includes('cuándo')) {
-                    response = "Horarios:\nMañana: 9:00 a. m. a 11:00 a. m.\nTarde: 3:00 p. m. a 5:00 p. m.\nLunes a viernes";
+                else if (messageLower.includes('precio') || messageLower.includes('costo') || messageLower.includes('honorarios')) {
+                    response = "Mis honorarios varían según la complejidad del caso. Ofrezco primera consulta gratuita donde evaluamos tu situación. Para casos complejos, manejamos cuotas accesibles.";
                 }
-                else if (messageLower.includes('certificado') || messageLower.includes('premio')) {
-                    response = "Al finalizar recibirás un certificado y posiblemente un premio si tu muñeco es el ganador.";
-                }
-                else if (messageLower.includes('precio') || messageLower.includes('costo')) {
-                    response = "Para precios actualizados, contacta a Rocío por WhatsApp haciendo click en el icono.";
-                }
-                else if (messageLower.includes('fecha') || messageLower.includes('cuándo empieza')) {
-                    response = "Para fechas de inicio, contáctate vía WhatsApp con Rocío.";
+                else if (messageLower.includes('consulta') || messageLower.includes('cita') || messageLower.includes('reunión')) {
+                    response = "Perfecto, podemos agendar tu consulta. Ofrezco atención presencial y virtual. La primera consulta es gratuita para evaluar tu caso. ¿Qué días y horarios te convienen?";
                 }
                 else if (messageLower.includes('gracias')) {
-                    response = "¡Es un placer ayudarte! Estoy aquí para lo que necesites. ¿Hay algo más en lo que pueda asistirte?";
+                    response = "Ha sido un placer asesorarte. Recuerda que estoy aquí para proteger tus derechos legales. No dudes en contactarme cuando necesites apoyo jurídico.";
                 }
                 else {
                     const responses = [
-                        "Te recomiendo contactar directamente a nuestra instructora Rocío por WhatsApp para más detalles.",
-                        "Para información específica, te sugiero comunicarte con Rocío por WhatsApp.",
-                        "Para una atención personalizada, contacta a Rocío por WhatsApp haciendo click en el icono."
+                        "Como tu abogada, necesito más detalles de tu situación para brindarte el mejor asesoramiento legal. ¿Podrías contarme más sobre tu caso?",
+                        "Entiendo tu consulta. En mi práctica legal, cada caso es único. Te sugiero agendar una consulta para revisar todos los aspectos legales involucrados.",
+                        "Para brindarte una asesoría precisa, necesitaríamos revisar la documentación y detalles específicos de tu situación legal. ¿Te gustaría agendar una cita?"
                     ];
                     response = responses[Math.floor(Math.random() * responses.length)];
                 }
@@ -671,18 +604,6 @@
             
             isListening = false;
             isProcessing = false;
-            const talkButton = document.getElementById('talkButton');
-            const pulseRing = document.getElementById('pulseRing');
-            const callStatus = document.getElementById('callStatus');
-            const statusIndicator = document.getElementById('statusIndicator');
-            
-            talkButton.textContent = "🎤 Hablar con Sofia";
-            talkButton.classList.remove('listening');
-            pulseRing.classList.remove('active');
-            callStatus.classList.remove('active');
-            statusIndicator.textContent = "Voz lista";
-            
-            stopCallTimer();
         }
 
         function speakText(text) {
@@ -759,68 +680,21 @@
         function handleSpeechEnd() {
             isSpeaking = false;
             const statusIndicator = document.getElementById('statusIndicator');
-            statusIndicator.textContent = "Voz lista";
             
-            if (!isListening) {
-                try {
-                    startVoiceRecognition();
-                } catch (error) {
-                    console.error('Error reiniciando reconocimiento:', error);
-                    stopVoiceRecognition();
-                }
-            }
-        }
-
-        function startCallTimer() {
-            callSeconds = 0;
-            callTimer = setInterval(function() {
-                callSeconds++;
-                const minutes = Math.floor(callSeconds / 60);
-                const seconds = callSeconds % 60;
-                document.getElementById('callTimer').textContent = 
-                    `Hablando ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-            }, 1000);
-        }
-
-        function stopCallTimer() {
-            if (callTimer) {
-                clearInterval(callTimer);
-                callTimer = null;
-            }
-            document.getElementById('callTimer').textContent = "Hablando 00:00";
-        }
-
-        function toggleMute() {
-            isMuted = !isMuted;
-            const muteButton = document.querySelector('.call-btn.mute');
-            const statusIndicator = document.getElementById('statusIndicator');
-            
-            if (isMuted) {
-                muteButton.innerHTML = '🔊';
-                muteButton.style.background = '#e8f4fd';
-                statusIndicator.textContent = "Micrófono silenciado";
-                
-                if (recognition && isListening) {
-                    recognition.stop();
-                }
-            } else {
-                muteButton.innerHTML = '🔇';
-                muteButton.style.background = '#f8f9fa';
+            if (isCalling) {
                 statusIndicator.textContent = "Escuchando...";
                 
-                if (recognition && !isListening && !isProcessing && !isSpeaking) {
+                if (!isListening && !isProcessing) {
                     try {
-                        recognition.start();
-                        isListening = true;
+                        startVoiceRecognition();
                     } catch (error) {
                         console.error('Error reiniciando reconocimiento:', error);
+                        endCall();
                     }
                 }
+            } else {
+                statusIndicator.textContent = "Listo para hablar";
             }
-        }
-
-        function endCall() {
-            stopVoiceRecognition();
         }
 
         function showError(message) {
@@ -830,7 +704,7 @@
             
             setTimeout(() => {
                 hideError();
-            }, 8000);
+            }, 5000);
         }
 
         function hideError() {
