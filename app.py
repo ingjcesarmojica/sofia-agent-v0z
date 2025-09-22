@@ -16,7 +16,7 @@ logging.basicConfig(level=logging.INFO)
 # Configuración AWS Polly
 AWS_ACCESS_KEY = os.environ.get("AWS_ACCESS_KEY")
 AWS_SECRET_KEY = os.environ.get("AWS_SECRET_KEY")
-AWS_REGION = os.environ.get("AWS_REGION", "us-east-1)
+AWS_REGION = os.environ.get("AWS_REGION", "us-east-1")
 
 # Verificar si las credenciales AWS están configuradas
 AWS_CONFIGURED = bool(AWS_ACCESS_KEY and AWS_SECRET_KEY)
