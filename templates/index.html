@@ -371,6 +371,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'healthy') {
+                        console.log("Servidor saludable, AWS configurado:", data.aws_configured);
                         // Mensaje de bienvenida por voz
                         setTimeout(() => {
                             speakText("Hola, soy Claudia García, tu abogada virtual. ¿En qué puedo ayudarte hoy?");
@@ -625,39 +626,68 @@
             const statusIndicator = document.getElementById('statusIndicator');
             statusIndicator.textContent = "Hablando...";
             
-            // En producción, intentar usar el servidor primero
-            const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
-            
-            if (isProduction) {
-                fetch(SPEAK_API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ text: text })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.useBrowserTTS) {
-                        // Si el servidor indica usar el navegador
-                        useBrowserTTS(text);
-                    } else if (data.audioContent) {
-                        // Si el servidor devuelve audio
-                        playAudio(data.audioContent);
-                    } else {
-                        // En caso de cualquier otra situación, usar navegador
-                        useBrowserTTS(text);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error al conectar con el servidor TTS:', error);
-                    // Si falla, usar navegador
+            // SIEMPRE intentar con el servidor primero
+            fetch(SPEAK_API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ text: text })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error en la respuesta del servidor');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.useBrowserTTS) {
+                    // Si el servidor indica usar el navegador
+                    console.log("Usando TTS del navegador por indicación del servidor");
                     useBrowserTTS(text);
-                });
-            } else {
-                // En desarrollo, usar navegador directamente
+                } else if (data.audioContent || data.audioUrl) {
+                    // Si el servidor devuelve audio
+                    console.log("Reproduciendo audio desde AWS Polly");
+                    const audioUrl = data.audioUrl || `data:audio/mp3;base64,${data.audioContent}`;
+                    playAudio(audioUrl);
+                } else {
+                    // En caso de cualquier otra situación, usar navegador
+                    console.log("Respuesta inesperada, usando TTS del navegador");
+                    useBrowserTTS(text);
+                }
+            })
+            .catch(error => {
+                console.error('Error al conectar con el servidor TTS:', error);
+                // Si falla, usar navegador
                 useBrowserTTS(text);
-            }
+            });
+        }
+
+        // Función para reproducir audio base64
+        function playAudio(audioUrl) {
+            const audio = new Audio(audioUrl);
+            
+            audio.onplay = function() {
+                console.log("Reproduciendo audio AWS Polly");
+            };
+            
+            audio.onended = function() {
+                console.log("Audio AWS Polly terminado");
+                handleSpeechEnd();
+            };
+            
+            audio.onerror = function(e) {
+                console.error('Error reproduciendo audio AWS:', e);
+                // Fallback a TTS del navegador
+                const text = document.querySelector('#chatBox .message:last-child')?.textContent || 'Texto no disponible';
+                useBrowserTTS(text);
+            };
+            
+            audio.play().catch(error => {
+                console.error('Error al reproducir audio:', error);
+                const text = document.querySelector('#chatBox .message:last-child')?.textContent || 'Texto no disponible';
+                useBrowserTTS(text);
+            });
         }
 
         // Función para usar la síntesis de voz del navegador
