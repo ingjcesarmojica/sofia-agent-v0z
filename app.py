@@ -259,7 +259,7 @@ Si no está seguro a qué categoría pertenece su caso, puede decir: "No sé cu�
 
 Por favor, descríbame brevemente su caso para entender mejor su situación."""
         
-        # Captura descripción - Pide correo electrónico (cualquier mensaje largo después de categoría)
+        # Captura descripción - Pide correo electrónico
         elif not hasattr(chat, 'user_email') and hasattr(chat, 'case_category') and len(message.strip()) > 10:
             chat.case_description = message.strip()
             response = f"""Gracias {getattr(chat, 'user_name', '')} por la información. 
@@ -268,20 +268,18 @@ Para agendar su cita y enviarle la confirmación, necesito su correo electrónic
 
 ¿Cuál es su correo electrónico?"""
         
-        # Captura del email - CUALQUIER respuesta después de pedir correo se toma como email
-        elif not hasattr(chat, 'user_phone') and hasattr(chat, 'user_email') == False:
-            # Cualquier respuesta aquí se considera el email
-            email = message.strip()
-            chat.user_email = email
+        # Captura del email - SIN VALIDACIÓN, cualquier respuesta se acepta
+        elif not hasattr(chat, 'user_email'):
+            # Cualquier respuesta se toma como email
+            chat.user_email = message.strip()
             response = f"""Correo registrado correctamente.
 
 Ahora necesito un número de teléfono para contactarle.
 
 ¿Cuál es su número de contacto?"""
         
-        # Captura del teléfono - CUALQUIER respuesta con números después de pedir teléfono
-        elif not hasattr(chat, 'appointment_time') and hasattr(chat, 'user_phone') == False:
-            # Cualquier respuesta con números se considera teléfono
+        # Captura del teléfono - Cualquier respuesta con números
+        elif not hasattr(chat, 'user_phone'):
             chat.user_phone = message.strip()
             response = f"""¡Perfecto {getattr(chat, 'user_name', '')}! Tenemos toda la información necesaria.
 
@@ -389,7 +387,7 @@ He registrado su consulta adicional. Uno de nuestros abogados especializados se 
     except Exception as e:
         app.logger.error(f"Exception in chat: {str(e)}")
         return jsonify({'error': str(e)}), 500
-
+        
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
