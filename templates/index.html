@@ -718,7 +718,8 @@
                 utterance.onerror = function(event) {
                     console.error("navegador TTS:", event.error);
                     handleSpeechEnd();
-                    showError("hablar: " + event.error);
+                    //showError("hablar: " + event.error);
+                    showError("");
                 };
                 
                 speechSynthesis.speak(utterance);
