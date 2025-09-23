@@ -87,6 +87,27 @@ def create_ssml_text(text):
     
     return ssml.strip()
 
+def create_generative_ssml(text):
+    """Crea SSML optimizado específicamente para motor generativo"""
+    # Mejorar pronunciación
+    improved_text = improve_pronunciation(text)
+    
+    # Añadir pausas naturales
+    text_with_pauses = add_natural_pauses(improved_text)
+    
+    # SSML simplificado para generativo (es más inteligente)
+    ssml = f"""
+    <speak>
+        <prosody rate="100%" pitch="+2%" volume="medium">
+            <amazon:auto-breaths volume="x-soft" frequency="medium">
+                {text_with_pauses}
+            </amazon:auto-breaths>
+        </prosody>
+    </speak>
+    """
+    
+    return ssml.strip()
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -117,52 +138,25 @@ def speak_text():
                             aws_secret_access_key=AWS_SECRET_KEY,
                             region_name=AWS_REGION)
         
-        # Crear SSML optimizado
-        ssml_text = create_ssml_text(text)
-        app.logger.info(f"SSML creado para texto: {text[:50]}...")
-        
-        # Sintetizar voz con Polly - motor neuronal para voz más natural
-        app.logger.info("Sintetizando con motor neuronal...")
-        response = polly.synthesize_speech(
-            Text=ssml_text,
-            TextType='ssml',  # Usar SSML
-            OutputFormat='mp3',
-            VoiceId='Lupe',
-            Engine='neural',  # Motor neuronal para voz más natural
-            LanguageCode='es-US'
-        )
-        
-        app.logger.info("Audio sintetizado correctamente con motor neuronal")
-        
-        # Convertir audio a base64
-        audio_data = response['AudioStream'].read()
-        audio_content = base64.b64encode(audio_data).decode('utf-8')
-        
-        return jsonify({
-            'audioContent': audio_content,
-            'audioUrl': f"data:audio/mp3;base64,{audio_content}",
-            'useBrowserTTS': False,
-            'engine': 'neural'
-        })
-            
-    except (BotoCoreError, ClientError) as error:
-        app.logger.error(f"AWS Polly error: {error}")
-        
-        # Fallback a voz estándar si falla neural
+        # INTENTAR PRIMERO CON MOTOR GENERATIVO (LA MEJOR OPCIÓN)
         try:
-            if 'polly' not in locals():
-                polly = boto3.client('polly',
-                                    aws_access_key_id=AWS_ACCESS_KEY,
-                                    aws_secret_access_key=AWS_SECRET_KEY,
-                                    region_name=AWS_REGION)
+            # Crear SSML optimizado para generativo
+            ssml_text = create_generative_ssml(text)
+            app.logger.info("Sintetizando con motor GENERATIVO...")
             
-            app.logger.info("Intentando con motor estándar como fallback...")
             response = polly.synthesize_speech(
-                Text=text,
+                Text=ssml_text,
+                TextType='ssml',
                 OutputFormat='mp3',
-                VoiceId='Lupe'
+                VoiceId='Lupe',
+                Engine='generative',  # CAMBIO PRINCIPAL: usar generativo
+                LanguageCode='es-US',
+                SampleRate='24000'   # Máxima calidad para generativo
             )
             
+            app.logger.info("Audio sintetizado correctamente con motor GENERATIVO")
+            
+            # Convertir audio a base64
             audio_data = response['AudioStream'].read()
             audio_content = base64.b64encode(audio_data).decode('utf-8')
             
@@ -170,18 +164,75 @@ def speak_text():
                 'audioContent': audio_content,
                 'audioUrl': f"data:audio/mp3;base64,{audio_content}",
                 'useBrowserTTS': False,
-                'engine': 'standard'
+                'engine': 'generative'
             })
             
-        except Exception as fallback_error:
-            app.logger.error(f"Fallback también falló: {fallback_error}")
-            return jsonify({
-                'audioContent': None,
-                'audioUrl': None,
-                'useBrowserTTS': True,
-                'text': text,
-                'error': str(error)
-            })
+        except (BotoCoreError, ClientError) as generative_error:
+            app.logger.warning(f"Motor generativo falló: {generative_error}")
+            app.logger.info("Intentando fallback a motor neural...")
+            
+            # FALLBACK 1: Sintetizar voz con Polly - motor neuronal para voz más natural
+            try:
+                ssml_text = create_ssml_text(text)
+                response = polly.synthesize_speech(
+                    Text=ssml_text,
+                    TextType='ssml',  # Usar SSML
+                    OutputFormat='mp3',
+                    VoiceId='Lupe',
+                    Engine='neural',  # Motor neuronal para voz más natural
+                    LanguageCode='es-US'
+                )
+                
+                app.logger.info("Audio sintetizado correctamente con motor neuronal")
+                
+                # Convertir audio a base64
+                audio_data = response['AudioStream'].read()
+                audio_content = base64.b64encode(audio_data).decode('utf-8')
+                
+                return jsonify({
+                    'audioContent': audio_content,
+                    'audioUrl': f"data:audio/mp3;base64,{audio_content}",
+                    'useBrowserTTS': False,
+                    'engine': 'neural'
+                })
+                
+            except (BotoCoreError, ClientError) as neural_error:
+                app.logger.error(f"AWS Polly neural error: {neural_error}")
+                
+                # Fallback a voz estándar si falla neural
+                try:
+                    if 'polly' not in locals():
+                        polly = boto3.client('polly',
+                                            aws_access_key_id=AWS_ACCESS_KEY,
+                                            aws_secret_access_key=AWS_SECRET_KEY,
+                                            region_name=AWS_REGION)
+                    
+                    app.logger.info("Intentando con motor estándar como fallback...")
+                    response = polly.synthesize_speech(
+                        Text=text,
+                        OutputFormat='mp3',
+                        VoiceId='Lupe'
+                    )
+                    
+                    audio_data = response['AudioStream'].read()
+                    audio_content = base64.b64encode(audio_data).decode('utf-8')
+                    
+                    return jsonify({
+                        'audioContent': audio_content,
+                        'audioUrl': f"data:audio/mp3;base64,{audio_content}",
+                        'useBrowserTTS': False,
+                        'engine': 'standard'
+                    })
+                    
+                except Exception as fallback_error:
+                    app.logger.error(f"Fallback también falló: {fallback_error}")
+                    return jsonify({
+                        'audioContent': None,
+                        'audioUrl': None,
+                        'useBrowserTTS': True,
+                        'text': text,
+                        'error': str(neural_error)
+                    })
             
     except Exception as e:
         app.logger.error(f"Exception in speak_text: {str(e)}")
@@ -293,9 +344,9 @@ Responda "sí" para confirmar o "no" para otro horario."""
             chat.appointment_time = "Lunes 29 de Septiembre - 10:30 am"
             response = f"""¡Cita confirmada {getattr(chat, 'user_name', '')}!
 
-📅 Fecha: Lunes 29 de Septiembre - 10:30 am
-📧 Confirmación enviada a: {getattr(chat, 'user_email', '')}
-📞 Teléfono de contacto: {getattr(chat, 'user_phone', '')}
+Fecha: Lunes 29 de Septiembre - 10:30 am
+Confirmación enviada a: {getattr(chat, 'user_email', '')}
+Teléfono de contacto: {getattr(chat, 'user_phone', '')}
 
 Recuerde: si su caso supera los 10 millones, no hay costo inicial. Solo paga el 10% si recuperamos su dinero.
 
@@ -313,9 +364,9 @@ Miércoles 1 de Octubre a las 3:30 de la tarde.
             chat.appointment_time = "Miércoles 1 de Octubre - 3:30 pm"
             response = f"""¡Cita confirmada {getattr(chat, 'user_name', '')}!
 
-📅 Fecha: Miércoles 1 de Octubre - 3:30 pm
-📧 Confirmación enviada a: {getattr(chat, 'user_email', '')}
-📞 Teléfono de contacto: {getattr(chat, 'user_phone', '')}
+Fecha: Miércoles 1 de Octubre - 3:30 pm
+Confirmación enviada a: {getattr(chat, 'user_email', '')}
+Teléfono de contacto: {getattr(chat, 'user_phone', '')}
 
 ¿Hay algo más en lo que pueda ayudarle?"""
         
@@ -325,7 +376,7 @@ Miércoles 1 de Octubre a las 3:30 de la tarde.
 
 Ha sido un placer ayudarle. Un abogado se contactará con usted en la fecha acordada.
 
-**Esta llamada se finalizará automáticamente. ¡Que tenga un excelente día!**
+Esta llamada se finalizará automáticamente. ¡Que tenga un excelente día!
 
 [LLAMADA FINALIZADA]"""
         
@@ -358,7 +409,7 @@ He registrado su consulta adicional. Uno de nuestros abogados especializados se 
         elif any(word in message_lower for word in ['gracias', 'adiós', 'chao', 'hasta luego']):
             response = f"""Gracias a usted {getattr(chat, 'user_name', '')}. 
 
-**Esta llamada se finalizará automáticamente. ¡Que tenga un excelente día!**
+Esta llamada se finalizará automáticamente. ¡Que tenga un excelente día!
 
 [LLAMADA FINALIZADA]"""
         
@@ -397,7 +448,7 @@ def health_check():
         'aws_configured': aws_configured,
         'aws_access_key_set': bool(AWS_ACCESS_KEY),
         'aws_secret_key_set': bool(AWS_SECRET_KEY),
-        'service': 'Amazon Polly - Voz Legal Neuronal' if aws_configured else 'Modo emergencia - Navegador TTS'
+        'service': 'Amazon Polly - Lupe Generativa' if aws_configured else 'Modo emergencia - Navegador TTS'
     })
 
 @app.route('/api/debug', methods=['GET'])
@@ -418,6 +469,7 @@ def ssml_test():
         text = data.get('text', 'Hola, soy Claudia García, tu abogada virtual.')
         
         ssml_versions = {
+            'generativo_optimizado': create_generative_ssml(text),
             'neuronal_basico': create_ssml_text(text),
             'neuronal_avanzado': f"""
             <speak>
@@ -446,6 +498,45 @@ def ssml_test():
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@app.route('/api/test-generative', methods=['POST'])
+def test_generative():
+    """Prueba si el motor generativo está disponible en tu región"""
+    try:
+        if not AWS_ACCESS_KEY or not AWS_SECRET_KEY:
+            return jsonify({'error': 'AWS credentials not configured'}), 400
+            
+        polly = boto3.client('polly',
+                            aws_access_key_id=AWS_ACCESS_KEY,
+                            aws_secret_access_key=AWS_SECRET_KEY,
+                            region_name=AWS_REGION)
+        
+        test_text = "Hola, esta es una prueba del motor generativo."
+        
+        # Intentar síntesis con motor generativo
+        response = polly.synthesize_speech(
+            Text=test_text,
+            OutputFormat='mp3',
+            VoiceId='Lupe',
+            Engine='generative',
+            LanguageCode='es-US'
+        )
+        
+        return jsonify({
+            'generative_available': True,
+            'region': AWS_REGION,
+            'message': 'Motor generativo disponible y funcionando',
+            'voice': 'Lupe',
+            'quality': 'premium'
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'generative_available': False,
+            'region': AWS_REGION,
+            'error': str(e),
+            'fallback': 'Usará motor neural como alternativa'
+        })
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
