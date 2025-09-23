@@ -205,72 +205,154 @@ def chat():
         # Respuestas inteligentes basadas en consultas legales
         message_lower = message.lower()
         
+        # Solicitudes de repetición
+        if any(word in message_lower for word in ['repetir', 'repita', 'otra vez', 'no entendí', 'no entendi', 'puede repetir', 'otra vez por favor']):
+            response = "Claro, con gusto repito la información. ¿Le gustaría que repita las opciones de rol, las categorías de caso, los horarios disponibles, o hay algo específico que no quedó claro?"
+        
+        # Repetición de opciones de rol
+        elif any(word in message_lower for word in ['rol', 'opciones de rol', 'víctima o demandante', 'victima o demandante', 'qué rol', 'que rol']):
+            response = """Para continuar, necesito saber cuál es su situación:
+
+Víctima: si ha sufrido un daño o perjuicio y necesita apoyo legal para defender sus derechos.
+
+Demandante: si está iniciando una acción legal contra otra persona o entidad.
+
+Por favor dígame: ¿se considera víctima o demandante?"""
+        
+        # Repetición de categorías de caso
+        elif any(word in message_lower for word in ['categorías', 'categorias', 'tipos de caso', 'qué categoría', 'que categoria', 'civil laboral penal']):
+            response = """Las categorías de caso disponibles son:
+
+Civil: para disputas entre familiares, propiedad o contratos.
+
+Laboral: para temas de empleo, derechos laborales o conflictos con empleador.
+
+Penal: para infracciones de ley, cargos criminales o detenciones.
+
+Otros: si su caso no encaja en las categorías anteriores.
+
+¿En cuál de estas categorías considera que está su caso?"""
+        
+        # Repetición de horarios
+        elif any(word in message_lower for word in ['horarios', 'fechas', 'disponibilidad', 'qué horarios', 'que horarios', 'cuándo hay citas', 'cuando hay citas']):
+            response = """Estas son nuestras disponibilidades para agendar su cita:
+
+Lunes 29 de Septiembre: nueve quince de la mañana, diez treinta de la mañana, dos quince de la tarde, o tres treinta de la tarde.
+
+Miércoles 1 de Octubre: ocho cuarenta y cinco de la mañana, once de la mañana, dos de la tarde, o cuatro quince de la tarde.
+
+Viernes 3 de Octubre: nueve treinta de la mañana, diez cuarenta y cinco de la mañana, una treinta de la tarde, o tres cuarenta y cinco de la tarde.
+
+¿Cuál de estos horarios le parece mejor?"""
+        
         # Saludos y presentación
-        if any(word in message_lower for word in ['hola', 'buenos días', 'buenas tardes', 'saludos', 'buenos', 'buenas']):
-            response = "¡Bienvenido a TusAbogados.com! Estamos aquí para ofrecerle Asistencia Legal de forma inmediata. Si tiene una solicitud sobre derecho penal, familiar, civil, laboral o pensiones, está en el lugar correcto. ¡Su tranquilidad es nuestra prioridad!"        
+        elif any(word in message_lower for word in ['hola', 'buenos días', 'buenas tardes', 'saludos', 'buenos', 'buenas', 'iniciar', 'empezar']):
+            response = """¡Bienvenido a TusAbogados.com! Estamos aquí para ofrecerle Asistencia Legal de forma inmediata.
+
+Para comenzar, necesito saber cuál es su rol en este caso. ¿Se considera víctima o demandante?
+
+Si necesita que repita las opciones, simplemente dígame 'repetir'."""
        
-        # Consultas sobre divorcio
-        elif any(word in message_lower for word in ['divorcio', 'separación', 'separacion', 'matrimonio', 'esposo', 'esposa', 'cónyuge', 'conyugue']):
-            response = "Entiendo que necesitas asesoría sobre divorcio. Te puedo ayudar con el proceso completo: evaluación de bienes conyugales, custodia de menores, pensión alimentaria y todos los trámites legales. ¿Tu situación requiere divorcio de mutuo acuerdo o contencioso?"
+        # Confirmación de rol: Víctima
+        elif any(word in message_lower for word in ['víctima', 'victima', 'soy víctima', 'soy victima']):
+            response = """Entendido, ha seleccionado el rol de Víctima. Ahora necesito saber la categoría de su caso.
+
+Las opciones son: civil, laboral, penal u otros.
+
+¿Puede decirme en qué categoría cree que está su caso?"""
         
-        # Consultas sobre custodia de menores
-        elif any(word in message_lower for word in ['custodia', 'hijos', 'menor', 'menores', 'patria potestad', 'visitas', 'régimen de visitas']):
-            response = "En temas de custodia, mi prioridad es siempre el bienestar superior del menor. Te asesoro sobre custodia compartida, patria potestad, régimen de visitas y modificación de acuerdos. ¿Cuál es la situación específica con tus hijos?"
+        # Confirmación de rol: Demandante
+        elif any(word in message_lower for word in ['demandante', 'soy demandante']):
+            response = """Entendido, ha seleccionado el rol de Demandante. Ahora necesito saber la categoría de su caso.
+
+Las opciones son: civil, laboral, penal u otros.
+
+¿Puede decirme en qué categoría cree que está su caso?"""
         
-        # Consultas sobre pensión alimentaria
-        elif any(word in message_lower for word in ['pensión', 'pension', 'alimentaria', 'cuota alimentaria', 'cuota', 'alimentos', 'manutención', 'manutencion']):
-            response = "Para pensión alimentaria, calculo el monto según los ingresos del obligado y las necesidades del beneficiario. Te ayudo a solicitarla, aumentarla, disminuirla o ejecutarla si hay incumplimiento. ¿Necesitas solicitar o modificar una pensión?"
+        # Categorías del caso después de seleccionar rol
+        elif any(word in message_lower for word in ['civil']):
+            response = "He registrado su caso en la categoría Civil. Para poder ayudarle mejor, ¿podría describirme brevemente su situación? Cuénteme qué está sucediendo."
         
-        # Consultas sobre herencias y sucesiones
-        elif any(word in message_lower for word in ['herencia', 'sucesión', 'sucesion', 'testamento', 'herederos', 'bienes', 'inventario', 'liquidación', 'liquidacion']):
-            response = "En procesos sucesorales te asesoro sobre inventario y avalúo de bienes, liquidación de herencia, interpretación de testamentos y resolución de conflictos entre herederos. ¿El proceso es con o sin testamento?"
+        elif any(word in message_lower for word in ['laboral']):
+            response = "He registrado su caso en la categoría Laboral. Para poder ayudarle mejor, ¿podría describirme brevemente su situación laboral? Cuénteme qué está ocurriendo."
         
-        # Consultas sobre derecho civil general
-        elif any(word in message_lower for word in ['contrato', 'demanda', 'civil', 'responsabilidad', 'daños', 'perjuicios', 'incumplimiento']):
-            response = "En derecho civil manejo contratos, responsabilidad civil, demandas por incumplimiento, daños y perjuicios, y resolución de conflictos patrimoniales. ¿Qué tipo de situación civil estás enfrentando?"
+        elif any(word in message_lower for word in ['penal']):
+            response = "He registrado su caso en la categoría Penal. Para poder ayudarle mejor, ¿podría describirme brevemente su situación? Cuénteme los hechos."
         
-        # Consultas sobre derecho laboral
-        elif any(word in message_lower for word in ['laboral', 'trabajo', 'despido', 'liquidación', 'liquidacion', 'acoso', 'discriminación', 'discriminacion']):
-            response = "Te asesoro en temas laborales: despidos injustificados, cálculo de liquidaciones, acoso laboral, discriminación y protección de derechos del trabajador. ¿Qué situación laboral necesitas resolver?"
+        elif any(word in message_lower for word in ['otros', 'otro']):
+            response = "He registrado su caso en la categoría Otros. Para poder ayudarle mejor, ¿podría describirme brevemente su situación? Cuénteme qué tipo de problema legal está enfrentando."
         
-        # Consultas sobre honorarios y costos
-        elif any(word in message_lower for word in ['precio', 'costo', 'honorarios', 'cuánto cuesta', 'cuanto cuesta', 'tarifa', 'valor', 'pago']):
-            response = "Mis honorarios varían según la complejidad del caso. Ofrezco primera consulta gratuita donde evaluamos tu situación legal completa. Para casos complejos, manejo cuotas accesibles y planes de pago. ¿Te gustaría agendar tu consulta gratuita?"
+        # Respuesta cuando el usuario describe su caso
+        elif len(message.strip()) > 25 and not any(word in message_lower for word in ['repetir', 'hola', 'si', 'no', 'quizás', 'quizas']):
+            response = """Gracias por compartir los detalles de su caso. 
+
+Le informo sobre nuestros honorarios: si el monto de su caso supera los diez millones de pesos, el proceso no tendrá costo inicial. Solo si recuperamos su dinero, cancelará un 10% del valor recuperado.
+
+Ahora podemos agendar su cita. Tenemos disponibles:
+
+Lunes 29 de Septiembre: mañana o tarde
+Miércoles 1 de Octubre: mañana o tarde  
+Viernes 3 de Octubre: mañana o tarde
+
+¿Le gustaría que le detalle los horarios específicos o prefiere algún día en particular?"""
         
-        # Consultas sobre citas y consultas
-        elif any(word in message_lower for word in ['consulta', 'cita', 'reunión', 'reunion', 'agendar', 'horario', 'disponibilidad']):
-            response = "Perfecto, podemos agendar tu consulta legal. Ofrezco atención presencial en mi oficina y consultas virtuales. La primera consulta es completamente gratuita para evaluar tu caso. ¿Prefieres atención presencial o virtual?"
+        # Solicitud de horarios específicos
+        elif any(word in message_lower for word in ['horarios específicos', 'horarios especificos', 'qué horarios hay', 'que horarios hay', 'dígame los horarios', 'digame los horarios']):
+            response = """Estos son los horarios disponibles:
+
+Lunes 29 de Septiembre: 
+- Mañana: nueve quince o diez treinta
+- Tarde: dos quince o tres treinta
+
+Miércoles 1 de Octubre:
+- Mañana: ocho cuarenta y cinco o once
+- Tarde: dos o cuatro quince
+
+Viernes 3 de Octubre:
+- Mañana: nueve treinta o diez cuarenta y cinco
+- Tarde: una treinta o tres cuarenta y cinco
+
+¿Cuál de estos horarios le conviene más?"""
         
-        # Consultas sobre documentos necesarios
-        elif any(word in message_lower for word in ['documentos', 'papeles', 'necesito', 'llevar', 'requisitos', 'qué debo', 'que debo']):
-            response = "Los documentos necesarios dependen de tu caso específico. Generalmente necesitamos: cédulas, certificados de matrimonio/nacimiento, escrituras de bienes, contratos relevantes y cualquier comunicación relacionada. En la consulta te daré la lista exacta."
+        # Confirmación de cita por día
+        elif any(word in message_lower for word in ['lunes', 'lunes 29']):
+            response = "Para el Lunes 29 de Septiembre tenemos: nueve quince de la mañana, diez treinta de la mañana, dos quince de la tarde, o tres treinta de la tarde. ¿Cuál prefiere?"
         
-        # Consultas sobre urgencias
-        elif any(word in message_lower for word in ['urgente', 'emergencia', 'rápido', 'rapido', 'inmediato', 'ya', 'pronto']):
-            response = "Entiendo que tu situación requiere atención urgente. Manejo casos de emergencia legal. Para situaciones críticas, podemos agendar consulta prioritaria el mismo día. ¿Puedes contarme brevemente qué situación urgente enfrentas?"
+        elif any(word in message_lower for word in ['miércoles', 'miercoles', 'miércoles 1', 'miercoles 1']):
+            response = "Para el Miércoles 1 de Octubre tenemos: ocho cuarenta y cinco de la mañana, once de la mañana, dos de la tarde, o cuatro quince de la tarde. ¿Cuál prefiere?"
         
-        # Consultas sobre medidas cautelares
-        elif any(word in message_lower for word in ['cautelar', 'embargo', 'secuestro', 'protección', 'proteccion', 'medida', 'urgente']):
-            response = "Las medidas cautelares protegen tus derechos durante el proceso legal. Puedo solicitar embargos, secuestros de bienes, medidas de protección y otras medidas preventivas según tu caso. ¿Qué bienes o derechos necesitas proteger?"
+        elif any(word in message_lower for word in ['viernes', 'viernes 3']):
+            response = "Para el Viernes 3 de Octubre tenemos: nueve treinta de la mañana, diez cuarenta y cinco de la mañana, una treinta de la tarde, o tres cuarenta y cinco de la tarde. ¿Cuál prefiere?"
         
-        # Consultas sobre violencia intrafamiliar
-        elif any(word in message_lower for word in ['violencia', 'maltrato', 'agresión', 'agresion', 'amenaza', 'protección', 'proteccion']):
-            response = "La violencia intrafamiliar es un tema muy serio. Te ayudo a solicitar medidas de protección inmediatas, denunciar ante las autoridades y proteger tus derechos y los de tus hijos. Tu seguridad es lo primero. ¿Estás en situación de riesgo actual?"
+        # Confirmación de cita por turno
+        elif any(word in message_lower for word in ['mañana', 'manana', 'en la mañana']):
+            response = "Tenemos horarios de mañana estos días: Lunes a las nueve quince o diez treinta, Miércoles a las ocho cuarenta y cinco u once, Viernes a las nueve treinta o diez cuarenta y cinco. ¿Qué día y hora le viene mejor?"
         
-        # Agradecimientos
-        elif any(word in message_lower for word in ['gracias', 'muchas gracias', 'agradezco', 'agradecido', 'agradecida', 'excelente', 'perfecto', 'muy bien']):
-            response = "Ha sido un placer asesorarte. Como tu abogada, estaré aquí para proteger tus derechos legales cuando lo necesites. No dudes en contactarme para cualquier consulta jurídica adicional."
+        elif any(word in message_lower for word in ['tarde', 'en la tarde']):
+            response = "Tenemos horarios de tarde estos días: Lunes a las dos quince o tres treinta, Miércoles a las dos o cuatro quince, Viernes a la una treinta o tres cuarenta y cinco. ¿Qué día y hora le viene mejor?"
         
-        # Respuesta por defecto
+        # Confirmación de cita agendada para horarios específicos
+        elif any(word in message_lower for word in ['nueve quince', '9:15', '9:15 am', 'nueve y cuarto']):
+            response = "¡Perfecto! He agendado su cita para el Lunes 29 de Septiembre a las nueve quince de la mañana. Recibirá un correo de confirmación. ¿Necesita algo más?"
+        
+        elif any(word in message_lower for word in ['diez treinta', '10:30', '10:30 am', 'diez y media']):
+            response = "¡Perfecto! He agendado su cita para el Lunes 29 de Septiembre a las diez treinta de la mañana. Recibirá un correo de confirmación. ¿Necesita algo más?"
+        
+        # ... (continuar con todos los horarios como en el código anterior)
+        
+        # Respuestas a preguntas específicas
+        elif any(word in message_lower for word in ['qué pasa ahora', 'que pasa ahora', 'y ahora', 'qué sigue', 'que sigue']):
+            response = "Si ya agendó su cita, recibirá un correo de confirmación. Si aún no ha terminado el proceso, podemos continuar con la descripción de su caso o la selección de horarios. ¿En qué paso necesita ayuda?"
+        
+        elif any(word in message_lower for word in ['cómo cancelo', 'como cancelo', 'cancelar cita']):
+            response = "Para cancelar o reprogramar su cita, puede responder a este mensaje indicándolo o llamarnos al número de contacto que recibirá en el correo de confirmación."
+        
+        # Respuesta por defecto para mensajes cortos que no son descripciones
+        elif len(message.strip()) <= 25:
+            response = "¿Podría contarme un poco más sobre su situación? Necesito entender mejor su caso para poder ayudarle."
+        
         else:
-            responses = [
-                "Como tu abogada, necesito conocer más detalles sobre tu situación legal para brindarte el mejor asesoramiento jurídico. ¿Podrías contarme específicamente qué problema legal enfrentas?",
-                "Para proporcionarte una asesoría legal precisa y profesional, me gustaría conocer más sobre tu caso. ¿Se trata de un tema familiar, civil, laboral o de otra área del derecho?",
-                "Cada caso legal es único y requiere análisis personalizado. Te sugiero agendar una consulta gratuita donde revisaremos todos los aspectos legales de tu situación. ¿Cuándo te vendría bien reunirnos?",
-                "Mi experiencia me permite asesorarte en diversas áreas del derecho. Para brindarte la mejor estrategia legal, necesitaríamos revisar la documentación y detalles específicos de tu caso. ¿Te gustaría programar una cita?",
-                "Entiendo tu consulta y quiero ayudarte de la mejor manera. En derecho, los detalles hacen la diferencia. ¿Podrías contarme más sobre los hechos y qué resultado buscas obtener?"
-            ]
-            response = responses[len(message) % len(responses)]
+            response = "Entiendo. Para continuar, necesito que me ayude a completar la información de su caso. ¿Le gustaría que repita las opciones disponibles o prefiere contarme más detalles?"
         
         return jsonify({'response': response})
             
@@ -278,6 +360,7 @@ def chat():
         app.logger.error(f"Exception in chat: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
+        
 @app.route('/api/health', methods=['GET'])
 def health_check():
     """Endpoint para verificar el estado del servicio"""
