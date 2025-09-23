@@ -259,8 +259,8 @@ Si no está seguro a qué categoría pertenece su caso, puede decir: "No sé cu�
 
 Por favor, descríbame brevemente su caso para entender mejor su situación."""
         
-        # Captura descripción - Pide correo electrónico
-        elif not hasattr(chat, 'user_email') and len(message.strip()) > 10:
+        # Captura descripción - Pide correo electrónico (cualquier mensaje largo después de categoría)
+        elif not hasattr(chat, 'user_email') and hasattr(chat, 'case_category') and len(message.strip()) > 10:
             chat.case_description = message.strip()
             response = f"""Gracias {getattr(chat, 'user_name', '')} por la información. 
 
@@ -268,12 +268,10 @@ Para agendar su cita y enviarle la confirmación, necesito su correo electrónic
 
 ¿Cuál es su correo electrónico?"""
         
-        # Captura del email - Pide teléfono
-        elif not hasattr(chat, 'user_phone') and ('@' in message or any(domain in message_lower for domain in ['.com', '.co', '.org', 'gmail', 'hotmail', 'outlook', 'yahoo'])):
-            email = message.strip().lower()
-            if ' ' in email:
-                email = email.replace(' ', '')
-            
+        # Captura del email - CUALQUIER respuesta después de pedir correo se toma como email
+        elif not hasattr(chat, 'user_phone') and hasattr(chat, 'user_email') == False:
+            # Cualquier respuesta aquí se considera el email
+            email = message.strip()
             chat.user_email = email
             response = f"""Correo registrado correctamente.
 
@@ -281,8 +279,9 @@ Ahora necesito un número de teléfono para contactarle.
 
 ¿Cuál es su número de contacto?"""
         
-        # Captura del teléfono - Ofrece primer horario
-        elif not hasattr(chat, 'appointment_time') and any(char.isdigit() for char in message) and len(message.replace(' ', '').replace('-', '').replace('+', '')) >= 7:
+        # Captura del teléfono - CUALQUIER respuesta con números después de pedir teléfono
+        elif not hasattr(chat, 'appointment_time') and hasattr(chat, 'user_phone') == False:
+            # Cualquier respuesta con números se considera teléfono
             chat.user_phone = message.strip()
             response = f"""¡Perfecto {getattr(chat, 'user_name', '')}! Tenemos toda la información necesaria.
 
@@ -365,24 +364,22 @@ He registrado su consulta adicional. Uno de nuestros abogados especializados se 
 
 [LLAMADA FINALIZADA]"""
         
-        # Respuesta por defecto
+        # Respuesta por defecto - Guía al siguiente paso
         else:
-            if hasattr(chat, 'appointment_time'):
-                response = "¿Hay algo más en lo que pueda ayudarle?"
+            if not hasattr(chat, 'user_name'):
+                response = "Por favor, dígame su nombre para continuar."
+            elif not hasattr(chat, 'user_role'):
+                response = "¿Se considera víctima o demandante en este caso?"
+            elif not hasattr(chat, 'case_category'):
+                response = "¿En qué categoría está su caso: civil, laboral o penal?"
+            elif not hasattr(chat, 'user_email'):
+                response = "Necesito su correo electrónico para enviarle la confirmación."
+            elif not hasattr(chat, 'user_phone'):
+                response = "Necesito su número de teléfono para contactarle."
+            elif not hasattr(chat, 'appointment_time'):
+                response = "¿Le viene bien el Lunes 29 de Septiembre a las 10:30 de la mañana?"
             else:
-                # Si no reconoce la respuesta, guía al siguiente paso
-                if not hasattr(chat, 'user_name'):
-                    response = "Por favor, dígame su nombre para continuar."
-                elif not hasattr(chat, 'user_role'):
-                    response = "¿Se considera víctima o demandante en este caso?"
-                elif not hasattr(chat, 'case_category'):
-                    response = "¿En qué categoría está su caso: civil, laboral o penal?"
-                elif not hasattr(chat, 'user_email'):
-                    response = "Necesito su correo electrónico para enviarle la confirmación."
-                elif not hasattr(chat, 'user_phone'):
-                    response = "Necesito su número de teléfono para contactarle."
-                else:
-                    response = "¿Le viene bien el Lunes 29 de Septiembre a las 10:30 de la mañana?"
+                response = "¿Hay algo más en lo que pueda ayudarle?"
         
         return jsonify({
             'response': response,
@@ -394,7 +391,6 @@ He registrado su consulta adicional. Uno de nuestros abogados especializados se 
         return jsonify({'error': str(e)}), 500
 
 
-        
 @app.route('/api/health', methods=['GET'])
 def health_check():
     """Endpoint para verificar el estado del servicio"""
