@@ -620,13 +620,14 @@
             isProcessing = false;
         }
 
+        // En la función speakText, después de obtener la respuesta del servidor
         function speakText(text) {
             isSpeaking = true;
             
             const statusIndicator = document.getElementById('statusIndicator');
             statusIndicator.textContent = "Hablando...";
             
-            // SIEMPRE intentar con el servidor primero
+            // SIEMPRE intentar con el servidor primero - CON MEJOR MANEJO DE ERRORES
             fetch(SPEAK_API_URL, {
                 method: 'POST',
                 headers: {
@@ -636,35 +637,35 @@
             })
             .then(response => {
                 if (!response.ok) {
-                    throw new Error('Error en la respuesta del servidor');
+                    throw new Error(`Error HTTP: ${response.status}`);
                 }
                 return response.json();
             })
             .then(data => {
+                console.log("Respuesta del servidor TTS:", data);
+                
                 if (data.useBrowserTTS) {
-                    // Si el servidor indica usar el navegador
-                    console.log("Usando TTS del navegador por indicación del servidor");
+                    console.log("Servidor indica usar TTS del navegador");
                     useBrowserTTS(text);
                 } else if (data.audioContent || data.audioUrl) {
-                    // Si el servidor devuelve audio
-                    console.log("Reproduciendo audio desde AWS Polly");
+                    console.log("Reproduciendo audio desde AWS Polly, motor:", data.engine || 'standard');
                     const audioUrl = data.audioUrl || `data:audio/mp3;base64,${data.audioContent}`;
-                    playAudio(audioUrl);
+                    playAudio(audioUrl, text); // Pasar texto como fallback
                 } else {
-                    // En caso de cualquier otra situación, usar navegador
                     console.log("Respuesta inesperada, usando TTS del navegador");
                     useBrowserTTS(text);
                 }
             })
             .catch(error => {
                 console.error('Error al conectar con el servidor TTS:', error);
-                // Si falla, usar navegador
                 useBrowserTTS(text);
             });
         }
 
-        // Función para reproducir audio base64
-        function playAudio(audioUrl) {
+
+
+        // Función mejorada para reproducir audio
+        function playAudio(audioUrl, fallbackText) {
             const audio = new Audio(audioUrl);
             
             audio.onplay = function() {
@@ -678,15 +679,24 @@
             
             audio.onerror = function(e) {
                 console.error('Error reproduciendo audio AWS:', e);
-                // Fallback a TTS del navegador
-                const text = document.querySelector('#chatBox .message:last-child')?.textContent || 'Texto no disponible';
-                useBrowserTTS(text);
+                // Fallback a TTS del navegador con el texto original
+                if (fallbackText) {
+                    console.log("Usando fallback a TTS del navegador");
+                    useBrowserTTS(fallbackText);
+                } else {
+                    handleSpeechEnd();
+                }
             };
             
+            // Intentar reproducir con manejo de errores mejorado
             audio.play().catch(error => {
                 console.error('Error al reproducir audio:', error);
-                const text = document.querySelector('#chatBox .message:last-child')?.textContent || 'Texto no disponible';
-                useBrowserTTS(text);
+                if (fallbackText) {
+                    console.log("Fallback a TTS del navegador por error de reproducción");
+                    useBrowserTTS(fallbackText);
+                } else {
+                    handleSpeechEnd();
+                }
             });
         }
 
