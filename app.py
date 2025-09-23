@@ -207,8 +207,8 @@ def chat():
         
         # Saludos y presentación
         if any(word in message_lower for word in ['hola', 'buenos días', 'buenas tardes', 'saludos', 'buenos', 'buenas']):
-            response = "Hola, soy Claudia García, abogada especializada en derecho civil y familiar. Estoy aquí para brindarte asesoría legal profesional. ¿En qué asunto legal puedo ayudarte hoy?"
-        
+            response = "¡Bienvenido a TusAbogados.com! Estamos aquí para ofrecerle Asistencia Legal de forma inmediata. Si tiene una solicitud sobre derecho penal, familiar, civil, laboral o pensiones, está en el lugar correcto. ¡Su tranquilidad es nuestra prioridad!"        
+       
         # Consultas sobre divorcio
         elif any(word in message_lower for word in ['divorcio', 'separación', 'separacion', 'matrimonio', 'esposo', 'esposa', 'cónyuge', 'conyugue']):
             response = "Entiendo que necesitas asesoría sobre divorcio. Te puedo ayudar con el proceso completo: evaluación de bienes conyugales, custodia de menores, pensión alimentaria y todos los trámites legales. ¿Tu situación requiere divorcio de mutuo acuerdo o contencioso?"
