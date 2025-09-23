@@ -334,11 +334,10 @@
         let isListening = false;
         let isProcessing = false;
         let isSpeaking = false;
-        let currentTTSMode = 'browser';
         let isCalling = false;
+        let isFirstCall = true; // Para controlar el saludo inicial
         
-        // URLs base de la API - usar rutas relativas para Render
-        const API_BASE_URL = '';
+        // URLs base de la API
         const CHAT_API_URL = '/api/chat';
         const SPEAK_API_URL = '/api/speak';
         
@@ -349,55 +348,20 @@
         function initializeApp() {
             checkVoiceSupport();
             
-            // Verificar si estamos en un entorno de producción (Render)
-            const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
-            
-            if (isProduction) {
-                // En producción, verificar estado del servidor
-                checkServerStatus();
-            } else {
-                // En desarrollo, mantener el comportamiento actual
-                showTTSEmergencyMode();
-                
-                // Mensaje de bienvenida por voz
-                setTimeout(() => {
-                    speakText("Hola, soy Claudia García, tu abogada virtual. ¿En qué puedo ayudarte hoy?");
-                }, 1000);
-            }
+            // Verificar estado del servidor
+            checkServerStatus();
         }
 
         function checkServerStatus() {
             fetch('/api/health')
                 .then(response => response.json())
                 .then(data => {
-                    if (data.status === 'healthy') {
-                        console.log("Servidor saludable, AWS configurado:", data.aws_configured);
-                        // Mensaje de bienvenida por voz
-                        setTimeout(() => {
-                            speakText("Hola, soy Claudia García, tu abogada virtual. ¿En qué puedo ayudarte hoy?");
-                        }, 1000);
-                    } else {
-                        showTTSEmergencyMode();
-                        
-                        // Mensaje de bienvenida por voz en modo offline
-                        setTimeout(() => {
-                            speakText("Hola, estoy en modo offline. ¿En qué puedo ayudarte hoy?");
-                        }, 1000);
-                    }
+                    console.log("Servidor saludable, AWS configurado:", data.aws_configured);
+                    console.log("Servicio:", data.service);
                 })
                 .catch(error => {
-                    console.error('checking server status:', error);
-                    showTTSEmergencyMode();
-                    
-                    // Mensaje de bienvenida por voz en modo offline
-                    setTimeout(() => {
-                        speakText("Hola, estoy en modo offline. ¿En qué puedo ayudarte hoy?");
-                    }, 1000);
+                    console.error('Error checking server status:', error);
                 });
-        }
-
-        function showTTSEmergencyMode() {
-            currentTTSMode = 'browser';
         }
 
         function checkVoiceSupport() {
@@ -427,9 +391,16 @@
             
             interfaceState.classList.add('calling');
             buttonLabel.textContent = 'Finalizar';
-            statusIndicator.textContent = 'Escuchando...';
+            statusIndicator.textContent = 'Conectando...';
             
-            startVoiceRecognition();
+            // ENVIAR SALUDO AUTOMÁTICO AL BACKEND SOLO LA PRIMERA VEZ
+            if (isFirstCall) {
+                isFirstCall = false;
+                sendChatMessage('hola'); // El backend manejará el saludo
+            } else {
+                // Si no es la primera vez, empezar directamente a escuchar
+                startVoiceRecognition();
+            }
         }
 
         function endCall() {
@@ -439,7 +410,7 @@
             const statusIndicator = document.getElementById('statusIndicator');
             
             interfaceState.classList.remove('calling');
-            buttonLabel.textContent = 'Marcar';
+            buttonLabel.textContent = 'Llamar';
             statusIndicator.textContent = 'Listo para hablar';
             
             stopVoiceRecognition();
@@ -468,14 +439,14 @@
                 
                 statusIndicator.innerHTML = "Procesando<span class='loading-dots'><span></span><span></span><span></span></span>";
                 
-                // Usar función que se conecta al backend
+                // Enviar mensaje al backend
                 sendChatMessage(transcript);
             };
             
             recognition.onerror = function(event) {
-                console.error('reconocimiento:', event.error);
+                console.error('Error reconocimiento:', event.error);
                 if (event.error !== 'no-speech' && event.error !== 'aborted') {
-                    showError("reconocimiento: " + event.error);
+                    showError("Error reconocimiento: " + event.error);
                 }
                 if (isCalling) {
                     setTimeout(() => {
@@ -483,7 +454,7 @@
                             try {
                                 recognition.start();
                             } catch (error) {
-                                console.error('reiniciando reconocimiento:', error);
+                                console.error('Error reiniciando reconocimiento:', error);
                             }
                         }
                     }, 1000);
@@ -497,7 +468,7 @@
                     try {
                         recognition.start();
                     } catch (error) {
-                        console.error('reiniciando reconocimiento:', error);
+                        console.error('Error reiniciando reconocimiento:', error);
                     }
                 }
             };
@@ -506,8 +477,8 @@
                 recognition.start();
                 console.log("Reconocimiento iniciado");
             } catch (error) {
-                console.error('activar el micrófono:', error);
-                showError('activar el micrófono: ' + error.message);
+                console.error('Error activar el micrófono:', error);
+                showError('Error activar el micrófono: ' + error.message);
             }
         }
 
@@ -516,95 +487,45 @@
             const statusIndicator = document.getElementById('statusIndicator');
             statusIndicator.innerHTML = "Procesando<span class='loading-dots'><span></span><span></span><span></span></span>";
             
-            // En producción, intentar conectar al servidor primero
-            const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
-            
-            if (isProduction) {
-                // LLAMADA REAL AL BACKEND - similar a guia.html
-                fetch(CHAT_API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ message: message })
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('respuesta del servidor');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    isProcessing = false;
-                    
-                    if (data.error) {
-                        showError("procesando tu mensaje. Por favor, intenta nuevamente.");
-                        return;
-                    }
-                    
-                    const response = data.response;
-                    speakText(response);
-                })
-                .catch(error => {
-                    console.error('conectar con el servidor:', error);
-                    // Si falla, usar modo offline
-                    useOfflineMode(message);
-                });
-            } else {
-                // En desarrollo, usar modo offline directamente
-                //useOfflineMode(message);
-            }
-        }
-
-        function useOfflineMode(message) {
-            // Simular respuesta del servidor offline con respuestas legales
-            setTimeout(() => {
-                let response = "";
-                const messageLower = message.toLowerCase();
-                
-                if (messageLower.includes('hola') || messageLower.includes('buenos') || messageLower.includes('saludos')) {
-                    response = "Hola, soy Claudia García, abogada especializada en derecho civil y familiar. ¿En qué asunto legal puedo asesorarte hoy?";
+            // SIEMPRE usar el backend - NO más lógica offline en el frontend
+            fetch(CHAT_API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ message: message })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error respuesta del servidor');
                 }
-                else if (messageLower.includes('divorcio') || messageLower.includes('separación')) {
-                    response = "Entiendo que necesitas asesoría sobre divorcio. Podemos revisar tu caso, evaluar los bienes conyugales, custodia de hijos y pensión alimentaria. ¿Cuál es tu situación específica?";
-                }
-                else if (messageLower.includes('custodia') || messageLower.includes('hijos') || messageLower.includes('menor')) {
-                    response = "En temas de custodia, siempre priorizamos el bienestar del menor. Podemos trabajar en custodia compartida, patria potestad y régimen de visitas. Te ayudo a proteger los derechos de tus hijos.";
-                }
-                else if (messageLower.includes('pensión') || messageLower.includes('alimentaria') || messageLower.includes('cuota')) {
-                    response = "Para pensión alimentaria, calcularemos el monto según los ingresos del obligado y las necesidades del beneficiario. Puedo ayudarte tanto a solicitarla como a modificarla o defenderla.";
-                }
-                else if (messageLower.includes('herencia') || messageLower.includes('sucesión') || messageLower.includes('testamento')) {
-                    response = "En procesos sucesorales, te asesoro sobre inventario de bienes, liquidación de herencia, testamentos y resolución de conflictos entre herederos. ¿Hay algún aspecto específico que te preocupa?";
-                }
-                else if (messageLower.includes('contrato') || messageLower.includes('demanda') || messageLower.includes('civil')) {
-                    response = "En derecho civil, manejo contratos, responsabilidad civil, demandas por incumplimiento y daños. Puedo revisar tu situación y determinar la mejor estrategia legal.";
-                }
-                else if (messageLower.includes('laboral') || messageLower.includes('trabajo') || messageLower.includes('despido')) {
-                    response = "Para temas laborales, te asesoro sobre despidos injustificados, liquidaciones, acoso laboral y derechos del trabajador. ¿Qué situación específica estás enfrentando?";
-                }
-                else if (messageLower.includes('precio') || messageLower.includes('costo') || messageLower.includes('honorarios')) {
-                    response = "Mis honorarios varían según la complejidad del caso. Ofrezco primera consulta gratuita donde evaluamos tu situación. Para casos complejos, manejamos cuotas accesibles.";
-                }
-                else if (messageLower.includes('consulta') || messageLower.includes('cita') || messageLower.includes('reunión')) {
-                    response = "Perfecto, podemos agendar tu consulta. Ofrezco atención presencial y virtual. La primera consulta es gratuita para evaluar tu caso. ¿Qué días y horarios te convienen?";
-                }
-                else if (messageLower.includes('gracias')) {
-                    response = "Ha sido un placer asesorarte. Recuerda que estoy aquí para proteger tus derechos legales. No dudes en contactarme cuando necesites apoyo jurídico.";
-                }
-                else {
-                    const responses = [
-                        "Como tu abogada, necesito más detalles de tu situación para brindarte el mejor asesoramiento legal. ¿Podrías contarme más sobre tu caso?",
-                        "Entiendo tu consulta. En mi práctica legal, cada caso es único. Te sugiero agendar una consulta para revisar todos los aspectos legales involucrados.",
-                        "Para brindarte una asesoría precisa, necesitaríamos revisar la documentación y detalles específicos de tu situación legal. ¿Te gustaría agendar una cita?"
-                    ];
-                    response = responses[Math.floor(Math.random() * responses.length)];
-                }
-                
+                return response.json();
+            })
+            .then(data => {
                 isProcessing = false;
-                speakText(response);
                 
-            }, 1000); // Simular delay de procesamiento
+                if (data.error) {
+                    showError("Error procesando tu mensaje. Por favor, intenta nuevamente.");
+                    handleSpeechEnd(); // Reanudar escucha
+                    return;
+                }
+                
+                const response = data.response;
+                console.log("Respuesta del backend:", response);
+                
+                // Verificar si la llamada debe terminar
+                if (data.end_call) {
+                    speakText(response, true); // true = terminar después de hablar
+                } else {
+                    speakText(response, false); // false = continuar escuchando
+                }
+            })
+            .catch(error => {
+                console.error('Error conectar con el servidor:', error);
+                isProcessing = false;
+                showError("Error de conexión. Verifica tu internet.");
+                handleSpeechEnd(); // Reanudar escucha
+            });
         }
 
         function stopVoiceRecognition() {
@@ -612,7 +533,7 @@
                 try {
                     recognition.stop();
                 } catch (error) {
-                    console.error("deteniendo reconocimiento:", error);
+                    console.error("Error deteniendo reconocimiento:", error);
                 }
             }
             
@@ -620,14 +541,13 @@
             isProcessing = false;
         }
 
-        // En la función speakText, después de obtener la respuesta del servidor
-        function speakText(text) {
+        function speakText(text, endCallAfter = false) {
             isSpeaking = true;
             
             const statusIndicator = document.getElementById('statusIndicator');
             statusIndicator.textContent = "Hablando...";
             
-            // SIEMPRE intentar con el servidor primero - CON MEJOR MANEJO DE ERRORES
+            // Intentar con AWS Polly primero
             fetch(SPEAK_API_URL, {
                 method: 'POST',
                 headers: {
@@ -645,27 +565,24 @@
                 console.log("Respuesta del servidor TTS:", data);
                 
                 if (data.useBrowserTTS) {
-                    console.log("Servidor indica usar TTS del navegador");
-                    useBrowserTTS(text);
+                    console.log("Usando TTS del navegador");
+                    useBrowserTTS(text, endCallAfter);
                 } else if (data.audioContent || data.audioUrl) {
                     console.log("Reproduciendo audio desde AWS Polly, motor:", data.engine || 'standard');
                     const audioUrl = data.audioUrl || `data:audio/mp3;base64,${data.audioContent}`;
-                    playAudio(audioUrl, text); // Pasar texto como fallback
+                    playAudio(audioUrl, text, endCallAfter);
                 } else {
                     console.log("Respuesta inesperada, usando TTS del navegador");
-                    useBrowserTTS(text);
+                    useBrowserTTS(text, endCallAfter);
                 }
             })
             .catch(error => {
-                console.error('conectar con el servidor TTS:', error);
-                useBrowserTTS(text);
+                console.error('Error conectar con el servidor TTS:', error);
+                useBrowserTTS(text, endCallAfter);
             });
         }
 
-
-
-        // Función mejorada para reproducir audio
-        function playAudio(audioUrl, fallbackText) {
+        function playAudio(audioUrl, fallbackText, endCallAfter = false) {
             const audio = new Audio(audioUrl);
             
             audio.onplay = function() {
@@ -674,37 +591,48 @@
             
             audio.onended = function() {
                 console.log("Audio AWS Polly terminado");
-                handleSpeechEnd();
+                handleSpeechEnd(endCallAfter);
             };
             
             audio.onerror = function(e) {
-                console.error('reproduciendo audio AWS:', e);
-                // Fallback a TTS del navegador con el texto original
+                console.error('Error reproduciendo audio AWS:', e);
                 if (fallbackText) {
                     console.log("Usando fallback a TTS del navegador");
-                    useBrowserTTS(fallbackText);
+                    useBrowserTTS(fallbackText, endCallAfter);
                 } else {
-                    handleSpeechEnd();
+                    handleSpeechEnd(endCallAfter);
                 }
             };
             
-            // Intentar reproducir con manejo de errores mejorado
             audio.play().catch(error => {
-                console.error('reproducir audio:', error);
+                console.error('Error reproducir audio:', error);
                 if (fallbackText) {
                     console.log("Fallback a TTS del navegador por error de reproducción");
-                    useBrowserTTS(fallbackText);
+                    useBrowserTTS(fallbackText, endCallAfter);
                 } else {
-                    handleSpeechEnd();
+                    handleSpeechEnd(endCallAfter);
                 }
             });
         }
 
-        // Función para usar la síntesis de voz del navegador
-        function useBrowserTTS(text) {
+        function useBrowserTTS(text, endCallAfter = false) {
             if ('speechSynthesis' in window) {
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.lang = 'es-ES';
+                
+                // Configurar voz más natural si está disponible
+                const voices = speechSynthesis.getVoices();
+                const spanishVoice = voices.find(voice => 
+                    voice.lang.includes('es') && voice.name.toLowerCase().includes('female')
+                ) || voices.find(voice => voice.lang.includes('es'));
+                
+                if (spanishVoice) {
+                    utterance.voice = spanishVoice;
+                }
+                
+                utterance.rate = 0.9;
+                utterance.pitch = 1.1;
+                utterance.volume = 0.8;
                 
                 utterance.onstart = function() {
                     console.log("Navegador TTS iniciado");
@@ -712,28 +640,31 @@
                 
                 utterance.onend = function() {
                     console.log("Navegador TTS terminado");
-                    handleSpeechEnd();
+                    handleSpeechEnd(endCallAfter);
                 };
                 
                 utterance.onerror = function(event) {
-                    console.error("navegador TTS:", event.error);
-                    handleSpeechEnd();
-                    //showError("hablar: " + event.error);
-                    //showError("");
+                    console.error("Error navegador TTS:", event.error);
+                    handleSpeechEnd(endCallAfter);
                 };
                 
                 speechSynthesis.speak(utterance);
             } else {
                 console.error("Síntesis de voz no soportada en este navegador");
-                handleSpeechEnd();
+                handleSpeechEnd(endCallAfter);
                 showError("La síntesis de voz no es compatible con tu navegador");
             }
         }
 
-        // Manejar el final del habla
-        function handleSpeechEnd() {
+        function handleSpeechEnd(endCallAfter = false) {
             isSpeaking = false;
             const statusIndicator = document.getElementById('statusIndicator');
+            
+            if (endCallAfter) {
+                // Terminar la llamada automáticamente
+                endCall();
+                return;
+            }
             
             if (isCalling) {
                 statusIndicator.textContent = "Escuchando...";
@@ -742,7 +673,7 @@
                     try {
                         startVoiceRecognition();
                     } catch (error) {
-                        console.error('reiniciando reconocimiento:', error);
+                        console.error('Error reiniciando reconocimiento:', error);
                         endCall();
                     }
                 }
