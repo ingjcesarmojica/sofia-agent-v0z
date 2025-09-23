@@ -215,81 +215,75 @@ Por favor, dígame su nombre."""
             chat.user_name = message.strip()
             response = f"""Mucho gusto {chat.user_name}. Para orientarle mejor, necesito saber su rol en el caso.
 
-Por ejemplo:
-- Si sufrió un accidente o le deben dinero, sería "víctima"
-- Si quiere demandar a alguien por incumplimiento, sería "demandante"
+¿Es usted:
+- "Víctima": por ejemplo, si sufrió un accidente de tránsito, le deben dinero, fue estafado, o sufrió algún daño o perjuicio.
+- "Demandante": por ejemplo, si quiere iniciar una demanda por divorcio, reclamar una herencia, demandar por incumplimiento de contrato, o exigir sus derechos laborales.
 
-¿Cuál es su situación: víctima o demandante?"""
+¿Se considera víctima o demandante en esta situación?"""
         
         # Rol: Víctima - Pregunta por categoría
         elif any(word in message_lower for word in ['víctima', 'victima', 'soy víctima', 'soy victima']):
-            response = """Entiendo que es víctima. Ahora necesito saber el tipo de caso.
+            response = f"""Entendido {getattr(chat, 'user_name', '')}, como víctima. Ahora necesito saber el tipo de caso.
 
 Por ejemplo:
-- "Civil": problemas familiares, contratos, propiedades
-- "Laboral": despido, acoso, derechos laborales  
-- "Penal": robos, agresiones, estafas
-- "No sé cuál es mi categoría": si no está seguro
+- "Civil": si tiene problemas familiares como divorcio, o problemas con contratos, o issues con propiedades.
+- "Laboral": por ejemplo si fue despedido injustificadamente, sufre acoso laboral, o necesita reclamar sus derechos laborales.  
+- "Penal": para casos de robos, agresiones físicas, amenazas, o estafas.
 
-¿En qué categoría está su caso?"""
+Si no está seguro, puede decir: "No sé cuál es mi categoría" o "La desconozco".
+
+¿En qué categoría cree que está su caso?"""
         
         # Rol: Demandante - Pregunta por categoría
         elif any(word in message_lower for word in ['demandante', 'soy demandante']):
-            response = """Entiendo que es demandante. Ahora necesito saber el tipo de caso.
+            response = f"""Entendido {getattr(chat, 'user_name', '')}, como demandante. Ahora necesito saber el tipo de caso.
 
 Por ejemplo:
-- "Civil": divorcio, herencias, contratos
-- "Laboral": demanda por despido, liquidación
-- "Penal": denuncia por agresión, estafa
-- "No sé cuál es mi categoría": si no está seguro
+- "Civil": si quiere demandar por divorcio, reclamar una herencia, exigir cumplimiento de contrato, o resolver problemas de propiedad.
+- "Laboral": por ejemplo si va a demandar por despido injustificado, acoso laboral, o para reclamar prestaciones laborales.  
+- "Penal": si va a denunciar por robos, agresiones, amenazas, o estafas.
 
-¿En qué categoría está su caso?"""
+Si no está seguro, puede decir: "No sé cuál es mi categoría" o "La desconozco".
+
+¿En qué categoría cree que está su caso?"""
         
         # Categorías del caso
         elif any(word in message_lower for word in ['civil']):
-            response = "Caso civil registrado. Cuénteme brevemente: ¿qué problema tiene con contratos, familia o propiedades?"
+            response = "Caso civil registrado. Cuénteme brevemente: ¿qué problema específico tiene con contratos, familia o propiedades?"
         
         elif any(word in message_lower for word in ['laboral']):
-            response = "Caso laboral registrado. Cuénteme brevemente: ¿qué situación tiene con su trabajo o empleador?"
+            response = "Caso laboral registrado. Cuénteme brevemente: ¿qué situación específica tiene con su trabajo o empleador?"
         
         elif any(word in message_lower for word in ['penal']):
-            response = "Caso penal registrado. Cuénteme brevemente: ¿qué hecho delictivo o infracción ocurrió?"
+            response = "Caso penal registrado. Cuénteme brevemente: ¿qué hecho delictivo o infracción específica ocurrió?"
         
-        elif any(word in message_lower for word in ['no sé', 'no se', 'no estoy seguro', 'no estoy segura', 'no sé cuál', 'no se cual']):
+        elif any(word in message_lower for word in ['no sé', 'no se', 'no estoy seguro', 'no estoy segura', 'no sé cuál', 'no se cual', 'la desconozco', 'desconozco']):
             response = "No hay problema. Cuénteme brevemente qué está sucediendo y le ayudo a identificar la categoría."
         
-        # Descripción del caso - Pide correo electrónico con instrucción clara
+        # Descripción del caso - Pide correo electrónico
         elif len(message.strip()) > 20 and not hasattr(chat, 'user_email'):
             chat.case_description = message.strip()
             response = f"""Gracias {getattr(chat, 'user_name', '')} por la información. Un abogado especializado revisará su caso.
 
 Para agendar su cita y enviarle la confirmación, necesito su correo electrónico.
 
-**Por favor, deletréelo lentamente para registrarlo correctamente.**
-
 ¿Cuál es su correo electrónico?"""
         
-        # Captura del email - Validación mejorada
-        elif '@' in message and '.' in message and not hasattr(chat, 'user_phone'):
-            # Limpiar y validar email
+        # Captura del email
+        elif not hasattr(chat, 'user_phone') and ('@' in message or any(domain in message_lower for domain in ['.com', '.co', '.org', 'gmail', 'hotmail', 'outlook', 'yahoo'])):
             email = message.strip().lower()
             if ' ' in email:
                 email = email.replace(' ', '')
             
-            # Confirmar email capturado
             chat.user_email = email
-            response = f"""Correo registrado: {email}
+            response = f"""Correo registrado correctamente.
 
 Ahora necesito un número de teléfono para contactarle.
 
 ¿Cuál es su número de contacto?"""
         
-        # Si el mensaje parece email pero no tiene formato completo
-        elif ('@' in message or 'gmail' in message_lower or 'hotmail' in message_lower or 'outlook' in message_lower) and not hasattr(chat, 'user_phone'):
-            response = "Para registrar su correo correctamente, necesito que lo deletree completo incluyendo el @ y el dominio. Por ejemplo: nombre@ejemplo.com"
-        
         # Captura del teléfono - Ofrece primer horario
-        elif any(char.isdigit() for char in message) and len(message.replace(' ', '').replace('-', '').replace('+', '')) >= 7 and not hasattr(chat, 'appointment_time'):
+        elif not hasattr(chat, 'appointment_time') and any(char.isdigit() for char in message) and len(message.replace(' ', '').replace('-', '').replace('+', '')) >= 7:
             chat.user_phone = message.strip()
             response = f"""¡Perfecto {getattr(chat, 'user_name', '')}! Tenemos toda la información necesaria.
 
@@ -311,17 +305,23 @@ Recuerde: si su caso supera los 10 millones, no hay costo inicial. Solo paga el 
 
 ¿Hay algo más en lo que pueda ayudarle?"""
         
-        # Respuesta NEGATIVA a "¿algo más?" - Cierre de conversación
-        elif hasattr(chat, 'appointment_time') and any(word in message_lower for word in ['no', 'nada más', 'eso es todo', 'no gracias', 'no thank you', 'listo', 'ya está', 'ya esta']):
+        # Respuesta NEGATIVA a "¿algo más?" - CIERRE AUTOMÁTICO
+        elif hasattr(chat, 'appointment_time') and any(word in message_lower for word in ['no', 'nada más', 'eso es todo', 'no gracias', 'listo', 'ya está', 'ya esta']):
             response = f"""¡Perfecto {getattr(chat, 'user_name', '')}! 
 
 Ha sido un placer ayudarle. Un abogado se contactará con usted en la fecha acordada.
 
-Que tenga un excelente día. ¡Hasta pronto!"""
+**Esta llamada se finalizará automáticamente. ¡Que tenga un excelente día!**
+
+[LLAMADA FINALIZADA]"""
         
-        # Respuesta AFIRMATIVA a "¿algo más?" - Ofrece ayuda adicional
-        elif hasattr(chat, 'appointment_time') and any(word in message_lower for word in ['sí', 'si', 'sí hay', 'si hay']):
-            response = "Claro, ¿en qué más puedo asistirle? Puede hacerme cualquier consulta legal."
+        # Consulta adicional después de cita confirmada - Respuesta profesional
+        elif hasattr(chat, 'appointment_time') and len(message.strip()) > 5:
+            response = f"""Entendido {getattr(chat, 'user_name', '')}. 
+
+He registrado su consulta adicional. Uno de nuestros abogados especializados se contactará con usted según los datos agendados y le ampliará toda la información al respecto.
+
+¿Hay alguna otra cosa en la que pueda asistirle?"""
         
         # Rechazo del primer horario - Ofrece segundo
         elif any(word in message_lower for word in ['no', 'no me viene', 'otro horario', 'otra hora']) and not hasattr(chat, 'appointment_time'):
@@ -346,7 +346,7 @@ Miércoles 1 de Octubre a las 3:30 de la tarde.
             if not hasattr(chat, 'user_name'):
                 response = "Por favor, dígame su nombre para continuar."
             elif not hasattr(chat, 'user_email'):
-                response = "Necesito su correo electrónico. Por favor, deletréelo lentamente."
+                response = "Necesito su correo electrónico para enviarle la confirmación de la cita."
             elif not hasattr(chat, 'user_phone'):
                 response = "Necesito su número de teléfono para contactarle."
             else:
@@ -354,7 +354,6 @@ Miércoles 1 de Octubre a las 3:30 de la tarde.
         
         # Reiniciar conversación
         elif any(word in message_lower for word in ['nuevo caso', 'otro caso', 'empezar de nuevo']):
-            # Limpiar variables de sesión
             for attr in ['user_name', 'user_email', 'user_phone', 'case_description', 'appointment_time']:
                 if hasattr(chat, attr):
                     delattr(chat, attr)
@@ -364,21 +363,24 @@ Miércoles 1 de Octubre a las 3:30 de la tarde.
         elif any(word in message_lower for word in ['gracias', 'adiós', 'chao', 'hasta luego']):
             response = f"""Gracias a usted {getattr(chat, 'user_name', '')}. 
 
-Que tenga un excelente día. ¡Hasta pronto!"""
+**Esta llamada se finalizará automáticamente. ¡Que tenga un excelente día!**
+
+[LLAMADA FINALIZADA]"""
         
-        # Respuesta por defecto
+        # Respuesta por defecto para mensajes cortos después de cita
+        elif hasattr(chat, 'appointment_time'):
+            response = "¿Hay algo más en lo que pueda ayudarle?"
         else:
-            if hasattr(chat, 'appointment_time'):
-                response = "¿Hay algo más en lo que pueda ayudarle?"
-            else:
-                response = "¿Podría ser más específico? Necesito esta información para agendar su cita con el abogado."
+            response = "¿Podría ser más específico? Necesito esta información para agendar su cita con el abogado."
         
-        return jsonify({'response': response})
+        return jsonify({
+            'response': response,
+            'end_call': '[LLAMADA FINALIZADA]' in response
+        })
             
     except Exception as e:
         app.logger.error(f"Exception in chat: {str(e)}")
         return jsonify({'error': str(e)}), 500
-
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
