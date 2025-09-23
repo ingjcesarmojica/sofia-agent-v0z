@@ -386,7 +386,7 @@
                     }
                 })
                 .catch(error => {
-                    console.error('Error checking server status:', error);
+                    console.error('checking server status:', error);
                     showTTSEmergencyMode();
                     
                     // Mensaje de bienvenida por voz en modo offline
@@ -473,9 +473,9 @@
             };
             
             recognition.onerror = function(event) {
-                console.error('Error en reconocimiento:', event.error);
+                console.error('reconocimiento:', event.error);
                 if (event.error !== 'no-speech' && event.error !== 'aborted') {
-                    showError("Error de reconocimiento: " + event.error);
+                    showError("reconocimiento: " + event.error);
                 }
                 if (isCalling) {
                     setTimeout(() => {
@@ -483,7 +483,7 @@
                             try {
                                 recognition.start();
                             } catch (error) {
-                                console.error('Error reiniciando reconocimiento:', error);
+                                console.error('reiniciando reconocimiento:', error);
                             }
                         }
                     }, 1000);
@@ -497,7 +497,7 @@
                     try {
                         recognition.start();
                     } catch (error) {
-                        console.error('Error reiniciando reconocimiento:', error);
+                        console.error('reiniciando reconocimiento:', error);
                     }
                 }
             };
@@ -506,8 +506,8 @@
                 recognition.start();
                 console.log("Reconocimiento iniciado");
             } catch (error) {
-                console.error('Error al activar el micrófono:', error);
-                showError('Error al activar el micrófono: ' + error.message);
+                console.error('activar el micrófono:', error);
+                showError('activar el micrófono: ' + error.message);
             }
         }
 
@@ -530,7 +530,7 @@
                 })
                 .then(response => {
                     if (!response.ok) {
-                        throw new Error('Error en la respuesta del servidor');
+                        throw new Error('respuesta del servidor');
                     }
                     return response.json();
                 })
@@ -538,7 +538,7 @@
                     isProcessing = false;
                     
                     if (data.error) {
-                        showError("Lo siento, hubo un error procesando tu mensaje. Por favor, intenta nuevamente.");
+                        showError("procesando tu mensaje. Por favor, intenta nuevamente.");
                         return;
                     }
                     
@@ -546,7 +546,7 @@
                     speakText(response);
                 })
                 .catch(error => {
-                    console.error('Error al conectar con el servidor:', error);
+                    console.error('conectar con el servidor:', error);
                     // Si falla, usar modo offline
                     useOfflineMode(message);
                 });
@@ -612,7 +612,7 @@
                 try {
                     recognition.stop();
                 } catch (error) {
-                    console.error("Error deteniendo reconocimiento:", error);
+                    console.error("deteniendo reconocimiento:", error);
                 }
             }
             
@@ -637,7 +637,7 @@
             })
             .then(response => {
                 if (!response.ok) {
-                    throw new Error(`Error HTTP: ${response.status}`);
+                    throw new Error(`HTTP: ${response.status}`);
                 }
                 return response.json();
             })
@@ -657,7 +657,7 @@
                 }
             })
             .catch(error => {
-                console.error('Error al conectar con el servidor TTS:', error);
+                console.error('conectar con el servidor TTS:', error);
                 useBrowserTTS(text);
             });
         }
@@ -678,7 +678,7 @@
             };
             
             audio.onerror = function(e) {
-                console.error('Error reproduciendo audio AWS:', e);
+                console.error('reproduciendo audio AWS:', e);
                 // Fallback a TTS del navegador con el texto original
                 if (fallbackText) {
                     console.log("Usando fallback a TTS del navegador");
@@ -690,7 +690,7 @@
             
             // Intentar reproducir con manejo de errores mejorado
             audio.play().catch(error => {
-                console.error('Error al reproducir audio:', error);
+                console.error('reproducir audio:', error);
                 if (fallbackText) {
                     console.log("Fallback a TTS del navegador por error de reproducción");
                     useBrowserTTS(fallbackText);
@@ -716,9 +716,9 @@
                 };
                 
                 utterance.onerror = function(event) {
-                    console.error("Error en navegador TTS:", event.error);
+                    console.error("navegador TTS:", event.error);
                     handleSpeechEnd();
-                    showError("Error al hablar: " + event.error);
+                    showError("hablar: " + event.error);
                 };
                 
                 speechSynthesis.speak(utterance);
@@ -741,7 +741,7 @@
                     try {
                         startVoiceRecognition();
                     } catch (error) {
-                        console.error('Error reiniciando reconocimiento:', error);
+                        console.error('reiniciando reconocimiento:', error);
                         endCall();
                     }
                 }
