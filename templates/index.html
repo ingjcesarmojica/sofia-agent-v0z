@@ -404,17 +404,52 @@
         }
 
         function endCall() {
-            isCalling = false;
-            const interfaceState = document.getElementById('interfaceState');
-            const buttonLabel = document.getElementById('buttonLabel');
-            const statusIndicator = document.getElementById('statusIndicator');
-            
-            interfaceState.classList.remove('calling');
-            buttonLabel.textContent = 'Llamar';
-            statusIndicator.textContent = 'Listo para hablar';
-            
-            stopVoiceRecognition();
+    console.log("Finalizando llamada...");
+    
+    // 1. Cambiar el estado principal
+    isCalling = false;
+    isListening = false;
+    isProcessing = false;
+    isSpeaking = false;
+    
+    // 2. Detener reconocimiento de voz activo
+    if (recognition) {
+        try {
+            recognition.stop();
+            recognition.abort(); // Forzar detención inmediata
+        } catch (error) {
+            console.error("Error deteniendo reconocimiento:", error);
         }
+        recognition = null; // Limpiar referencia
+    }
+    
+    // 3. Detener síntesis de voz del navegador
+    if ('speechSynthesis' in window) {
+        try {
+            speechSynthesis.cancel();
+        } catch (error) {
+            console.error("Error deteniendo síntesis:", error);
+        }
+    }
+    
+    // 4. Actualizar interfaz visual
+    const interfaceState = document.getElementById('interfaceState');
+    const buttonLabel = document.getElementById('buttonLabel');
+    const statusIndicator = document.getElementById('statusIndicator');
+    
+    interfaceState.classList.remove('calling');
+    buttonLabel.textContent = 'Llamar';
+    statusIndicator.textContent = 'Llamada finalizada';
+    
+    // 5. Mensaje de confirmación por 3 segundos
+    setTimeout(() => {
+        if (!isCalling) { // Solo si aún no está en llamada
+            statusIndicator.textContent = 'Listo para hablar';
+        }
+    }, 3000);
+    
+    console.log("Llamada finalizada correctamente");
+}
 
         function startVoiceRecognition() {
             const statusIndicator = document.getElementById('statusIndicator');
