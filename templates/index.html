@@ -336,6 +336,7 @@
         let isSpeaking = false;
         let isCalling = false;
         let isFirstCall = true; // Para controlar el saludo inicial
+        let currentAudio = null;
         
         // URLs base de la API
         const CHAT_API_URL = '/api/chat';
@@ -403,7 +404,8 @@
             }
         }
 
-        function endCall() {
+
+function endCall() {
     console.log("Finalizando llamada...");
     
     // 1. Cambiar el estado principal
@@ -423,16 +425,29 @@
         recognition = null; // Limpiar referencia
     }
     
-    // 3. Detener síntesis de voz del navegador
+    // 3. Detener audio de AWS Polly si está reproduciéndose
+    if (currentAudio) {
+        try {
+            currentAudio.pause();
+            currentAudio.currentTime = 0;
+            currentAudio = null;
+            console.log("Audio AWS Polly detenido");
+        } catch (error) {
+            console.error("Error deteniendo audio AWS:", error);
+        }
+    }
+    
+    // 4. Detener síntesis de voz del navegador
     if ('speechSynthesis' in window) {
         try {
             speechSynthesis.cancel();
+            console.log("Síntesis de voz cancelada");
         } catch (error) {
             console.error("Error deteniendo síntesis:", error);
         }
     }
     
-    // 4. Actualizar interfaz visual
+    // 5. Actualizar interfaz visual
     const interfaceState = document.getElementById('interfaceState');
     const buttonLabel = document.getElementById('buttonLabel');
     const statusIndicator = document.getElementById('statusIndicator');
@@ -441,7 +456,7 @@
     buttonLabel.textContent = 'Llamar';
     statusIndicator.textContent = 'Llamada finalizada';
     
-    // 5. Mensaje de confirmación por 3 segundos
+    // 6. Mensaje de confirmación por 3 segundos
     setTimeout(() => {
         if (!isCalling) { // Solo si aún no está en llamada
             statusIndicator.textContent = 'Listo para hablar';
@@ -450,6 +465,9 @@
     
     console.log("Llamada finalizada correctamente");
 }
+
+
+
 
         function startVoiceRecognition() {
             const statusIndicator = document.getElementById('statusIndicator');
@@ -617,38 +635,45 @@
             });
         }
 
-        function playAudio(audioUrl, fallbackText, endCallAfter = false) {
-            const audio = new Audio(audioUrl);
-            
-            audio.onplay = function() {
-                console.log("Reproduciendo audio AWS Polly");
-            };
-            
-            audio.onended = function() {
-                console.log("Audio AWS Polly terminado");
-                handleSpeechEnd(endCallAfter);
-            };
-            
-            audio.onerror = function(e) {
-                console.error('Error reproduciendo audio AWS:', e);
-                if (fallbackText) {
-                    console.log("Usando fallback a TTS del navegador");
-                    useBrowserTTS(fallbackText, endCallAfter);
-                } else {
-                    handleSpeechEnd(endCallAfter);
-                }
-            };
-            
-            audio.play().catch(error => {
-                console.error('Error reproducir audio:', error);
-                if (fallbackText) {
-                    console.log("Fallback a TTS del navegador por error de reproducción");
-                    useBrowserTTS(fallbackText, endCallAfter);
-                } else {
-                    handleSpeechEnd(endCallAfter);
-                }
-            });
+
+function playAudio(audioUrl, fallbackText, endCallAfter = false) {
+    // Crear nuevo objeto de audio y guardarlo globalmente
+    currentAudio = new Audio(audioUrl);
+    
+    currentAudio.onplay = function() {
+        console.log("Reproduciendo audio AWS Polly");
+    };
+    
+    currentAudio.onended = function() {
+        console.log("Audio AWS Polly terminado");
+        currentAudio = null; // Limpiar referencia cuando termina
+        handleSpeechEnd(endCallAfter);
+    };
+    
+    currentAudio.onerror = function(e) {
+        console.error('Error reproduciendo audio AWS:', e);
+        currentAudio = null; // Limpiar referencia en caso de error
+        if (fallbackText) {
+            console.log("Usando fallback a TTS del navegador");
+            useBrowserTTS(fallbackText, endCallAfter);
+        } else {
+            handleSpeechEnd(endCallAfter);
         }
+    };
+    
+    currentAudio.play().catch(error => {
+        console.error('Error reproducir audio:', error);
+        currentAudio = null; // Limpiar referencia
+        if (fallbackText) {
+            console.log("Fallback a TTS del navegador por error de reproducción");
+            useBrowserTTS(fallbackText, endCallAfter);
+        } else {
+            handleSpeechEnd(endCallAfter);
+        }
+    });
+}
+
+
 
         function useBrowserTTS(text, endCallAfter = false) {
             if ('speechSynthesis' in window) {
